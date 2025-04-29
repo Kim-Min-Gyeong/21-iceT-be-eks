@@ -1,5 +1,5 @@
 ---
-name: "# ❓ Question (질문/논의)"
+name: "❓ Question (질문/논의)"
 about: '질문이 있을 경우 작성하는 이슈 템플릿입니다. '
 title: ''
 labels: ''
