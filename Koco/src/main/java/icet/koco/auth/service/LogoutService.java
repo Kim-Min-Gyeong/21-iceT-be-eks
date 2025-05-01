@@ -22,7 +22,7 @@ public class LogoutService {
     public LogoutResponse logout(HttpServletRequest request, HttpServletResponse response) {
         // 1. 쿠키에서 accessToken 추출
         String accessToken = extractTokenFromCookies(request);
-        System.out.println(">>>>> (LogoutServie) accessToken: " + accessToken);
+        System.out.println(">>>>> (LogoutService) accessToken: " + accessToken);
 
         // 2. 유효성 검사
         if (accessToken == null || !jwtTokenProvider.validateToken(accessToken)) {

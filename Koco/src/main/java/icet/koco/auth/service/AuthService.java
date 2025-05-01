@@ -120,7 +120,7 @@ public class AuthService {
         String newAccessToken = jwtTokenProvider.createAccessToken(user);
         System.out.println(">>>>> (AuthService: refreshAccessToken) New Access token: " + newAccessToken);
 
-        Cookie cookie = new Cookie("accessToken", newAccessToken);
+        Cookie cookie = new Cookie("access_token", newAccessToken);
         cookie.setHttpOnly(true);
         cookie.setMaxAge(30 * 60); // 30분 (JWT 만료와 맞춤)
         cookie.setPath("/");

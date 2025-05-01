@@ -1,6 +1,8 @@
 package icet.koco.problemSet.repository;
 
+import icet.koco.problemSet.entity.ProblemSet;
 import icet.koco.problemSet.entity.Survey;
+import icet.koco.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,4 +19,7 @@ public interface SurveyRepository extends JpaRepository<Survey, Long> {
         @Param("userId") Long userId,
         @Param("problemSetId") Long problemSetId
     );
+
+    boolean existsByUserAndProblemSet(User user, ProblemSet problemSet);
+
 }
