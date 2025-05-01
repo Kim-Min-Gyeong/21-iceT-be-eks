@@ -16,7 +16,6 @@ public class AuthResponse {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class AuthData {
-        private String refreshToken;
         private String email;
         private String name;
         private boolean isRegistered;
