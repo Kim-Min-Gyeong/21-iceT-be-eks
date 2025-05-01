@@ -34,4 +34,13 @@ public class AuthController {
         return ResponseEntity.ok(logoutService.logout(request, response));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshResponse> refreshToken(@RequestBody RefreshRequest request,
+        HttpServletResponse response) {
+        RefreshResponse refreshResponse = authService.refreshAccessToken(request.getRefreshToken(), response);
+        return ResponseEntity.ok(refreshResponse);
+    }
+
+
+
 }

@@ -2,11 +2,14 @@ package icet.koco.auth.service;
 
 import icet.koco.auth.dto.AuthResponse;
 import icet.koco.auth.dto.KakaoUserResponse;
+import icet.koco.auth.dto.RefreshResponse;
 import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.repository.OAuthRepository;
+import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.JwtTokenProvider;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.servlet.http.Cookie;
@@ -43,6 +46,7 @@ public class AuthService {
             System.out.println(">>>>> (AuthService: loginWithKakao) Refresh token: " + refreshToken);
             Cookie cookie = new Cookie("accessToken", accessToken);
             cookie.setHttpOnly(true);
+            cookie.setMaxAge(30 * 60); // 30분 (JWT 만료와 맞춤)
             cookie.setPath("/");
             response.addCookie(cookie);
 
@@ -89,4 +93,45 @@ public class AuthService {
                 .build())
             .build();
     }
+
+    // 리프레쉬 토큰 재발급
+    public RefreshResponse refreshAccessToken(String refreshToken, HttpServletResponse response) {
+        // 1. 토큰 유효성 검사
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new UnauthorizedException("유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        // 2. 토큰에서 userId 추출
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        Optional<OAuth> oauthOpt = oauthRepository.findByUserId(userId);
+
+        // 3. Redis 또는 DB에서 저장된 리프레시 토큰 가져오기
+        String redisToken = redisTemplate.opsForValue().get(userId.toString());
+        if (redisToken == null || !redisToken.equals(refreshToken)) {
+            throw new UnauthorizedException("Redis에 저장된 토큰이 일치하지 않습니다.");
+        } else {
+            if (oauthOpt.isEmpty() || !refreshToken.equals(oauthOpt.get().getRefreshToken())) {
+                throw new UnauthorizedException("토큰이 일치하지 않습니다.");
+            }
+        }
+
+        // 4. 새 accessToken 생성 및 쿠키 저장
+        User user = oauthOpt.get().getUser();
+        String newAccessToken = jwtTokenProvider.createAccessToken(user);
+        System.out.println(">>>>> (AuthService: refreshAccessToken) New Access token: " + newAccessToken);
+
+        Cookie cookie = new Cookie("accessToken", newAccessToken);
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(30 * 60); // 30분 (JWT 만료와 맞춤)
+        cookie.setPath("/");
+        response.addCookie(cookie);
+
+        // 5. 응답 생성
+        return RefreshResponse.builder()
+            .code("TOKEN_REFRESH_SUCCESS")
+            .message("토큰이 성공적으로 재발급되었습니다.")
+            .data(Map.of("accessToken", newAccessToken))
+            .build();
+    }
+
 }

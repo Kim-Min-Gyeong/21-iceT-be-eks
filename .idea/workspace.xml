@@ -5,16 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="04cb8b11-cbc8-4aa1-a304-6ecca318280e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/dto/LogoutResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/LogoutService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/dto/RefreshRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/dto/RefreshResponse.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/KocoApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/KocoApplication.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/controller/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/repository/OAuthRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/repository/OAuthRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/AuthService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/global/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/global/exception/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/util/JwtTokenProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/util/JwtTokenProvider.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,7 +145,7 @@
       <workItem from="1745890171095" duration="11672000" />
       <workItem from="1745905877463" duration="27840000" />
       <workItem from="1745971219995" duration="134000" />
-      <workItem from="1745971370107" duration="41136000" />
+      <workItem from="1745971370107" duration="42902000" />
     </task>
     <servers />
   </component>
