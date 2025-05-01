@@ -13,6 +13,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 닉네임으로 유저 조회
     Optional<User> findByNickname(String nickname);
 
+    // 이메일으로 유저 조회
+    Optional<User> findByEmail(String email);
+
     // ID로 조회하면서 soft delete 제외
     Optional<User> findByIdAndDeletedAtIsNull(Long id);
 

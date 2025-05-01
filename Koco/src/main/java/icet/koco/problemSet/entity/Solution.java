@@ -26,9 +26,17 @@ public class Solution {
     @JoinColumn(name = "problem_id", nullable = false)
     private Problem problem;
 
-    // 문제 해설 본문
-    @Column(name = "explanation", nullable = false, columnDefinition = "TEXT")
-    private String explanation;
+    // 문제 개요
+    @Column(name = "problem_description", nullable = false, columnDefinition = "TEXT")
+    private String description;
+
+    // 문제 알고리즘 설명
+    @Column(name = "algorithm", nullable = false, columnDefinition = "TEXT")
+    private String algorithm;
+
+    // 문제 해결 방법
+    @Column(name = "problem_solving", nullable = false, columnDefinition = "TEXT")
+    private String problemSolving;
 
     // C++ 코드
     @Column(name = "code_cpp", nullable = false, columnDefinition = "TEXT")
