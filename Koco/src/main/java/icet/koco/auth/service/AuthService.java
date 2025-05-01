@@ -1,11 +1,9 @@
 package icet.koco.auth.service;
 
-
 import icet.koco.auth.dto.AuthResponse;
 import icet.koco.auth.dto.KakaoUserResponse;
 import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.repository.OAuthRepository;
-import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.JwtTokenProvider;
@@ -13,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.redis.core.RedisTemplate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -24,16 +23,25 @@ public class AuthService {
     private final UserRepository userRepository;
     private final OAuthRepository oauthRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public AuthResponse loginWithKakao(String code, HttpServletResponse response) {
         KakaoUserResponse kakaoUser = kakaoOAuthClient.getUserInfo(code);
         Optional<User> userOpt = userRepository.findByEmail(kakaoUser.getEmail());
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            String refreshToken = jwtTokenProvider.createRefreshToken(user);
-            oauthRepository.updateRefreshToken(user.getId(), refreshToken);
 
-            Cookie cookie = new Cookie("accessToken", jwtTokenProvider.createAccessToken(user));
+            // RefreshToken Redis에 저장
+            String refreshToken = jwtTokenProvider.createRefreshToken(user);
+            redisTemplate.opsForValue().set(user.getId().toString(), refreshToken);
+
+            oauthRepository.updateRefreshToken(user.getId(), refreshToken);
+            String accessToken = jwtTokenProvider.createAccessToken(user);
+
+            // Token(access, refresh) 발급 확인용
+            System.out.println(">>>>> (AuthService: loginWithKakao) Access token: " + accessToken);
+            System.out.println(">>>>> (AuthService: loginWithKakao) Refresh token: " + refreshToken);
+            Cookie cookie = new Cookie("accessToken", accessToken);
             cookie.setHttpOnly(true);
             cookie.setPath("/");
             response.addCookie(cookie);

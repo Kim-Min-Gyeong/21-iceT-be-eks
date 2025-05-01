@@ -9,10 +9,14 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import java.util.Date;
 import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtTokenProvider {
+
+    @Value("${JWT_SECRET}")
+    private String secret;
 
     private SecretKey key;
     private final long accessTokenValidity = 1000 * 60 * 30; // 30분
@@ -20,7 +24,7 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() {
-        this.key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String createAccessToken(User user) {

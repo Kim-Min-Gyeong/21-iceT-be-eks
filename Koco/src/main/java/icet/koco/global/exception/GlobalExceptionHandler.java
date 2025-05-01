@@ -35,12 +35,14 @@ public class GlobalExceptionHandler {
     // 500 (그 외 모든 예외)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleInternal(Exception ex, HttpServletRequest request) {
-        // Swagger 문서 요청은 예외 처리하지 않고 pass
+        // Swagger 요청은 예외를 아예 응답 없이 무시함
         if (request.getRequestURI().contains("/v3/api-docs")) {
-            throw new RuntimeException(ex); // 그냥 원래 예외를 다시 던져 Swagger가 처리하게 함
+            return ResponseEntity.ok().build(); // 예외를 던지지 말고 200 OK로 응답
         }
+
         return buildErrorResponse("INTERNAL_SERVER_ERROR", "서버에서 에러가 발생하였습니다", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 
     // 공통 응답 생성 함수
     private ResponseEntity<ErrorResponse> buildErrorResponse(String code, String message, HttpStatus status) {

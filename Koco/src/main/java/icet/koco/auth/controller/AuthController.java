@@ -2,14 +2,12 @@ package icet.koco.auth.controller;
 
 import icet.koco.auth.dto.*;
 import icet.koco.auth.service.AuthService;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import icet.koco.auth.service.LogoutService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import io.swagger.v3.oas.annotations.Operation;
-
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -17,12 +15,8 @@ import io.swagger.v3.oas.annotations.Operation;
 public class AuthController {
 
     private final AuthService authService;
+    private final LogoutService logoutService;
 
-
-    @Operation(
-        summary = "Kakao 로그인 callback",
-        description = "인가 코드로 액세스 토큰 발급 후 사용자 정보 반환"
-    )
     @CrossOrigin(origins = "*")
     @GetMapping("/callback")
     public ResponseEntity<AuthResponse> kakaoCallback(@RequestParam("code") String code,
@@ -32,6 +26,12 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
 
 
+    }
+
+    @CrossOrigin(origins = "*")
+    @PostMapping("/logout")
+    public ResponseEntity<LogoutResponse> logout(HttpServletRequest request, HttpServletResponse response) {
+        return ResponseEntity.ok(logoutService.logout(request, response));
     }
 
 }
