@@ -3,6 +3,7 @@ package icet.koco.auth.service;
 import icet.koco.auth.dto.LogoutResponse;
 import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.global.exception.UnauthorizedException;
+import icet.koco.util.CookieUtil;
 import icet.koco.util.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ public class LogoutService {
     private final OAuthRepository oauthRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
+    private final CookieUtil cookieUtil;
 
     public LogoutResponse logout(HttpServletRequest request, HttpServletResponse response) {
         // 1. 쿠키에서 accessToken 추출
@@ -49,8 +51,8 @@ public class LogoutService {
         redisTemplate.opsForValue().set("BL:" + accessToken, "logout", expiration, java.util.concurrent.TimeUnit.MILLISECONDS);
 
         // 6. 쿠키 제거
-        invalidateAccessTokenCookie(response);
-        invalidateRefreshTokenCookie(response);
+        cookieUtil.invalidateCookie(response, "access_token");
+        cookieUtil.invalidateCookie(response, "refresh_token");
 
         // 7. 응답 반환
         return LogoutResponse.builder()
@@ -68,23 +70,5 @@ public class LogoutService {
             }
         }
         return null;
-    }
-
-    private void invalidateAccessTokenCookie(HttpServletResponse response) {
-        System.out.println(">>>>> invalidateAccessTokenCookie");
-        Cookie cookie = new Cookie("access_token", null);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
-    }
-
-    private void invalidateRefreshTokenCookie(HttpServletResponse response) {
-        System.out.println(">>>>> invalidateRefreshTokenCookie");
-        Cookie cookie = new Cookie("refresh_token", null);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
     }
 }
