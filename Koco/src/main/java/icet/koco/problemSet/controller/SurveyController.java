@@ -21,8 +21,7 @@ public class SurveyController {
 
     @PostMapping
     public ResponseEntity<SurveyResponseDto> submitSurvey(
-        @RequestBody ProblemSetSurveyRequestDto requestDto
-    ) {
+        @RequestBody ProblemSetSurveyRequestDto requestDto) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         System.out.println(">>>>> Controller userId: " + userId);
         SurveyResponseDto response = surveyService.submitSurvey(userId, requestDto);

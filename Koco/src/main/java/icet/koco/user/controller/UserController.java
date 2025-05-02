@@ -24,31 +24,12 @@ public class UserController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<?>> deleteUser(HttpServletRequest request) {
-        String token = extractTokenFromCookies(request, "access_token");
-        if (token == null || !jwtTokenProvider.validateToken(token)) {
-            throw new UnauthorizedException("유효하지 않거나 만료된 토큰입니다.");
-        }
+    public ResponseEntity<ApiResponse<?>> deleteUser() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(">>>>> Controller userId: " + userId);
 
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
         userService.deleteUser(userId);
-
         return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/test/user-id")
-    public ResponseEntity<?> testUserId() {
-        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok("UserId: " + userId);
-    }
-
-    private String extractTokenFromCookies(HttpServletRequest request, String name) {
-        if (request.getCookies() == null) return null;
-        for (Cookie cookie : request.getCookies()) {
-            if (name.equals(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-        return null;
-    }
+ㄴ
 }

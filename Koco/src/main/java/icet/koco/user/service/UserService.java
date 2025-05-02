@@ -38,13 +38,12 @@ public class UserService {
         try {
             kakaoOAuthClient.unlinkUser(oauth.getProviderId()); // Long 또는 String
         } catch (Exception e) {
-            log.warn("Kakao unlink 실패 - 무시하고 계속 진행", e);
-
+            log.warn(">>>>> Kakao unlink 실패: {}", e.getMessage());
         }
         // Redis refreshToken 삭제
         redisTemplate.delete(userId.toString());
 
-        // soft delete 처리
+        // soft delete 처리 (삭제요구한 일시)
         user.setDeletedAt(LocalDateTime.now());
 
         // user에 정보 저장
