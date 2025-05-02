@@ -22,7 +22,7 @@ public class LogoutService {
     public LogoutResponse logout(HttpServletRequest request, HttpServletResponse response) {
         // 1. 쿠키에서 accessToken 추출
         String accessToken = extractTokenFromCookies(request);
-        System.out.println(">>>>> (LogoutServie) accessToken: " + accessToken);
+        System.out.println(">>>>> (LogoutService) accessToken: " + accessToken);
 
         // 2. 유효성 검사
         if (accessToken == null || !jwtTokenProvider.validateToken(accessToken)) {
@@ -45,8 +45,12 @@ public class LogoutService {
         // 5. Redis에서도 삭제
         redisTemplate.delete(userId.toString());
 
+        long expiration = jwtTokenProvider.getExpiration(accessToken);
+        redisTemplate.opsForValue().set("BL:" + accessToken, "logout", expiration, java.util.concurrent.TimeUnit.MILLISECONDS);
+
         // 6. 쿠키 제거
         invalidateAccessTokenCookie(response);
+        invalidateRefreshTokenCookie(response);
 
         // 7. 응답 반환
         return LogoutResponse.builder()
@@ -67,7 +71,17 @@ public class LogoutService {
     }
 
     private void invalidateAccessTokenCookie(HttpServletResponse response) {
+        System.out.println(">>>>> invalidateAccessTokenCookie");
         Cookie cookie = new Cookie("access_token", null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+    }
+
+    private void invalidateRefreshTokenCookie(HttpServletResponse response) {
+        System.out.println(">>>>> invalidateRefreshTokenCookie");
+        Cookie cookie = new Cookie("refresh_token", null);
         cookie.setPath("/");
         cookie.setMaxAge(0);
         cookie.setHttpOnly(true);

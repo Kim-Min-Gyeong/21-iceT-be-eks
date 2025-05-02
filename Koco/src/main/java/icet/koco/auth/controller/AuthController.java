@@ -24,8 +24,6 @@ public class AuthController {
         System.out.println("인가코드: " + code);
         AuthResponse authResponse = authService.loginWithKakao(code, response);
         return ResponseEntity.ok(authResponse);
-
-
     }
 
     @CrossOrigin(origins = "*")
@@ -34,13 +32,14 @@ public class AuthController {
         return ResponseEntity.ok(logoutService.logout(request, response));
     }
 
+    @CrossOrigin(origins = "*")
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshResponse> refreshToken(@RequestBody RefreshRequest request,
-        HttpServletResponse response) {
-        RefreshResponse refreshResponse = authService.refreshAccessToken(request.getRefreshToken(), response);
+    public ResponseEntity<RefreshResponse> refreshToken(
+        @CookieValue(value = "refresh_token", required = true) String refreshToken,
+        HttpServletResponse response)
+    {
+        System.out.println("refreshToken: " + refreshToken);
+        RefreshResponse refreshResponse = authService.refreshAccessToken(refreshToken, response);
         return ResponseEntity.ok(refreshResponse);
     }
-
-
-
 }

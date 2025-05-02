@@ -1,5 +1,7 @@
 package icet.koco.problemSet.repository;
 
+import icet.koco.problemSet.entity.Problem;
+import icet.koco.problemSet.entity.ProblemSet;
 import icet.koco.problemSet.entity.ProblemSetProblem;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -20,5 +22,12 @@ public interface ProblemSetProblemRepository extends JpaRepository<ProblemSetPro
         WHERE psp.problemSet.id = :problemSetId
     """)
     List<Long> findProblemIdsByProblemSetId(@Param("problemSetId") Long problemSetId);
+
+    // 문제집(ProblemSet)에 포함된 문제 전체 조회
+    List<ProblemSetProblem> findAllByProblemSet(ProblemSet problemSet);
+
+    // ProblemSetProblemRepository.java
+    @Query("SELECT psp FROM ProblemSetProblem psp JOIN FETCH psp.problem WHERE psp.problemSet = :problemSet")
+    List<ProblemSetProblem> findWithProblemsByProblemSet(@Param("problemSet") ProblemSet problemSet);
 
 }

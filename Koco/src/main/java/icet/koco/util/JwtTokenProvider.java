@@ -62,4 +62,16 @@ public class JwtTokenProvider {
             .getBody();
         return Long.valueOf(claims.getSubject());
     }
+
+    // 토큰 만료시간 계산
+    public long getExpiration(String token) {
+        return Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .getBody()
+            .getExpiration()
+            .getTime() - System.currentTimeMillis();
+    }
+
 }
