@@ -26,7 +26,6 @@ public class ProblemSetService {
     private final ProblemSetProblemRepository problemSetProblemRepository;
     private final SurveyRepository surveyRepository;
     private final UserRepository userRepository;
-    private final ProblemRepository problemRepository;
 
     @Transactional(readOnly = true)
     public ProblemSetResponseDto getProblemSetByDate(Long userId, LocalDate date) {
@@ -36,8 +35,8 @@ public class ProblemSetService {
         ProblemSet problemSet = problemSetRepository.findByCreatedAt(date)
             .orElseThrow(() -> new ForbiddenException("해당 날짜에 출제된 문제집을 찾을 수 없습니다."));
 
-        // ⭐ 중간 테이블 통해 문제 리스트 조회
-        List<ProblemSetProblem> mappings = problemSetProblemRepository.findAllByProblemSet(problemSet);
+        // N+1 방지: JOIN FETCH
+        List<ProblemSetProblem> mappings = problemSetProblemRepository.findWithProblemsByProblemSet(problemSet);
 
         List<Problem> problems = mappings.stream()
             .map(ProblemSetProblem::getProblem)
@@ -47,10 +46,10 @@ public class ProblemSetService {
             .map(Problem::getId)
             .toList();
 
-        long answeredCount = surveyRepository.countByUserAndProblemSet(user, problemSet);
+        // 리스트로 한번만 조회
         List<Long> answeredProblemIds = surveyRepository.findProblemIdsByUserAndProblemSet(userId, problemSet.getId());
 
-        boolean isAnswered = (answeredCount == problems.size()) && answeredProblemIds.containsAll(problemIds);
+        boolean isAnswered = (answeredProblemIds.size() == problems.size()) && answeredProblemIds.containsAll(problemIds);
 
         List<ProblemDto> problemDtos = problems.stream()
             .map(ProblemDto::from)

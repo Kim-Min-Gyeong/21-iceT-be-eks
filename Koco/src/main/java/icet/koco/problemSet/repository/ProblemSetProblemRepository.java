@@ -25,4 +25,9 @@ public interface ProblemSetProblemRepository extends JpaRepository<ProblemSetPro
 
     // 문제집(ProblemSet)에 포함된 문제 전체 조회
     List<ProblemSetProblem> findAllByProblemSet(ProblemSet problemSet);
+
+    // ProblemSetProblemRepository.java
+    @Query("SELECT psp FROM ProblemSetProblem psp JOIN FETCH psp.problem WHERE psp.problemSet = :problemSet")
+    List<ProblemSetProblem> findWithProblemsByProblemSet(@Param("problemSet") ProblemSet problemSet);
+
 }
