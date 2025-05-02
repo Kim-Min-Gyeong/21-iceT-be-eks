@@ -5,10 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="04cb8b11-cbc8-4aa1-a304-6ecca318280e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/user/controller/UserController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/user/service/UserService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/repository/ProblemSetProblemRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/repository/ProblemSetProblemRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/KakaoOAuthClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/KakaoOAuthClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/controller/SurveyController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/controller/SurveyController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/ProblemSetService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/ProblemSetService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/SurveyService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/SurveyService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/user/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/user/repository/UserRepository.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,7 +89,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Spring Boot.KocoApplication.executor": "Run",
-    "git-widget-placeholder": "feat/9-survey-response",
+    "git-widget-placeholder": "feat/12-user-withdrawl",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/Users/yeon/Documents/GitHub/21-iceT-be",
     "node.js.detected.package.eslint": "true",
@@ -145,7 +150,7 @@
       <workItem from="1745890171095" duration="11672000" />
       <workItem from="1745905877463" duration="27840000" />
       <workItem from="1745971219995" duration="134000" />
-      <workItem from="1745971370107" duration="95428000" />
+      <workItem from="1745971370107" duration="96628000" />
     </task>
     <servers />
   </component>
