@@ -29,7 +29,7 @@ public class ProblemSetService {
 
     @Transactional(readOnly = true)
     public ProblemSetResponseDto getProblemSetByDate(Long userId, LocalDate date) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(() -> new ForbiddenException("사용자를 찾을 수 없습니다."));
 
         ProblemSet problemSet = problemSetRepository.findByCreatedAt(date)

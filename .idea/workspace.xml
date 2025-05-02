@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="04cb8b11-cbc8-4aa1-a304-6ecca318280e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/dto/ProblemSurveyRequestDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/dto/ProblemSurveyRequestDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/repository/ProblemSetProblemRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/repository/ProblemSetProblemRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/ProblemSetService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/ProblemSetService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/SurveyService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/SurveyService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -116,6 +116,7 @@
         <env name="KAKAO_CLIENT_SECRET" value="vO3lebzvfIEpyZmizgScv7CL2qxwU9MW" />
         <env name="KAKAO_REDIRECT_URI" value="http://localhost:8080/api/v1/auth/callback" />
         <env name="JWT_SECRET" value="f9A8c7D6e5B4g3H2j1K0LmN9OpQ8rStUvWxYzZtQsPvNxLmKo" />
+        <env name="KAKAO_ADMIN_KEY" value="4fdc95eb0a877e45eba174f44fbd90c7" />
       </envs>
       <module name="Koco.main" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="icet.koco.KocoApplication" />
@@ -144,7 +145,7 @@
       <workItem from="1745890171095" duration="11672000" />
       <workItem from="1745905877463" duration="27840000" />
       <workItem from="1745971219995" duration="134000" />
-      <workItem from="1745971370107" duration="85276000" />
+      <workItem from="1745971370107" duration="95428000" />
     </task>
     <servers />
   </component>
