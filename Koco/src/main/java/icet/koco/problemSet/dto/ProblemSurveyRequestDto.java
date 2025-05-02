@@ -7,7 +7,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ProblemSurveyRequestDto {
-    private Long id;
     private Long problemId;
     private boolean isSolved;
     private String difficultyLevel;
