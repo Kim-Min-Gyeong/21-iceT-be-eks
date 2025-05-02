@@ -34,9 +34,11 @@ public class AuthController {
 
     @CrossOrigin(origins = "*")
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshResponse> refreshToken(@RequestBody RefreshRequest request,
-        HttpServletResponse response) {
-        RefreshResponse refreshResponse = authService.refreshAccessToken(request.getRefreshToken(), response);
+    public ResponseEntity<RefreshResponse> refreshToken(
+        @CookieValue(value = "refresh_token", required = true) String refreshToken,
+        HttpServletResponse response)
+    {
+        RefreshResponse refreshResponse = authService.refreshAccessToken(refreshToken, response);
         return ResponseEntity.ok(refreshResponse);
     }
 }

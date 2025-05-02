@@ -44,11 +44,19 @@ public class AuthService {
             // Token(access, refresh) 발급 확인용
             System.out.println(">>>>> (AuthService: loginWithKakao) Access token: " + accessToken);
             System.out.println(">>>>> (AuthService: loginWithKakao) Refresh token: " + refreshToken);
-            Cookie cookie = new Cookie("accessToken", accessToken);
+
+            // accessToken 전달
+            Cookie cookie = new Cookie("access_token", accessToken);
             cookie.setHttpOnly(true);
             cookie.setMaxAge(30 * 60); // 30분 (JWT 만료와 맞춤)
             cookie.setPath("/");
             response.addCookie(cookie);
+
+            Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+            refreshCookie.setPath("/");
+            response.addCookie(refreshCookie);
 
             return AuthResponse.builder()
                 .code("LOGIN_SUCCESS")
@@ -77,13 +85,13 @@ public class AuthService {
             .refreshToken(refreshToken)
             .build());
 
-        Cookie accessCookie = new Cookie("accessToken", accessToken);
+        Cookie accessCookie = new Cookie("access_token", accessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setMaxAge(30 * 60); // 30분
         accessCookie.setPath("/");
         response.addCookie(accessCookie);
 
-        Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+        Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
         refreshCookie.setHttpOnly(true);
         refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
         refreshCookie.setPath("/");
