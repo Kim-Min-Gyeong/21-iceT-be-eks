@@ -38,6 +38,7 @@ public class AuthController {
         @CookieValue(value = "refresh_token", required = true) String refreshToken,
         HttpServletResponse response)
     {
+        System.out.println("refreshToken: " + refreshToken);
         RefreshResponse refreshResponse = authService.refreshAccessToken(refreshToken, response);
         return ResponseEntity.ok(refreshResponse);
     }
