@@ -5,13 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="04cb8b11-cbc8-4aa1-a304-6ecca318280e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/util/CookieUtil.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/util/TokenExtractor.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/problemSet/service/SolutionService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/controller/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/LogoutService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/auth/service/LogoutService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/user/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/user/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/user/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/Koco/src/main/java/icet/koco/user/service/UserService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,7 +143,7 @@
       <workItem from="1745890171095" duration="11672000" />
       <workItem from="1745905877463" duration="27840000" />
       <workItem from="1745971219995" duration="134000" />
-      <workItem from="1745971370107" duration="98965000" />
+      <workItem from="1745971370107" duration="102384000" />
     </task>
     <servers />
   </component>
