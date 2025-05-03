@@ -9,7 +9,6 @@ import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.JwtTokenProvider;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import jakarta.servlet.http.Cookie;
@@ -33,6 +32,12 @@ public class AuthService {
         Optional<User> userOpt = userRepository.findByEmail(kakaoUser.getEmail());
         if (userOpt.isPresent()) {
             User user = userOpt.get();
+
+            // 탈퇴 사용자면 deletedAt만 null로 하고 복구처리
+            if (user.getDeletedAt() != null) {
+                user.setDeletedAt(null);
+                userRepository.save(user);
+            }
 
             // RefreshToken Redis에 저장
             String refreshToken = jwtTokenProvider.createRefreshToken(user);
