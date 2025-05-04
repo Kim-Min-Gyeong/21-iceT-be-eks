@@ -54,5 +54,15 @@ public class UserService {
         cookieUtil.invalidateCookie(response, "access_token");
         cookieUtil.invalidateCookie(response, "refresh_token");
     }
+
+    @Transactional
+    public void updateUserInfo(Long userId, String nickname, String profileImgUrl, String statusMsg) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
+
+        if (nickname != null) user.setNickname(nickname);
+        if (profileImgUrl != null) user.setProfileImgUrl(profileImgUrl);
+        if (statusMsg != null) user.setStatusMsg(statusMsg);
+    }
 }
 

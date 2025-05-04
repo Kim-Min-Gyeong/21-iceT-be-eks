@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.BodyInserters;
+
 
 @Slf4j
 @Component
@@ -27,10 +29,13 @@ public class KakaoOAuthClient {
     public KakaoUserResponse getUserInfo(String code) {
         String token = kakaoWebClient.post()
             .uri("https://kauth.kakao.com/oauth/token")
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .bodyValue("grant_type=authorization_code&client_id=" + clientId +
-                "&client_secret=" + clientSecret +
-                "&redirect_uri=" + redirectUri + "&code=" + code)
+            .header("Content-Type", "application/x-www-form-urlencoded") // 있어도 되고, 없어도 자동 설정됨
+            .body(BodyInserters.fromFormData("grant_type", "authorization_code")
+                .with("client_id", clientId)
+                .with("client_secret", clientSecret)
+                .with("redirect_uri", redirectUri)
+                .with("code", code)
+            )
             .retrieve()
             .bodyToMono(KakaoTokenResponse.class)
             .block()
