@@ -30,18 +30,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserController {
 
     private final UserService userService;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final TokenExtractor tokenExtractor;
     private final ImageUploader imageUploader;
 
     @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse<?>> deleteUser(HttpServletRequest request, HttpServletResponse response) {
-        String token = tokenExtractor.extractFromCookies(request, "access_token");
-        if (token == null || !jwtTokenProvider.validateToken(token)) {
-            throw new UnauthorizedException("유효하지 않거나 만료된 토큰입니다.");
-        }
-
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+    public ResponseEntity<ApiResponse<?>> deleteUser(HttpServletResponse response) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.deleteUser(userId, response);
 
         return ResponseEntity.noContent().build();
@@ -51,10 +44,9 @@ public class UserController {
     public ResponseEntity<UserResponse> updateUserInfo(
         @RequestPart(value = "nickname", required = false) String nickname,
         @RequestPart(value = "statusMsg", required = false) String statusMsg,
-        @RequestPart(value = "profileImg", required = false) MultipartFile profileImg,
-        @CookieValue("access_token") String accessToken) {
+        @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
 
-        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String profileImgUrl = (profileImg != null && !profileImg.isEmpty()) ? imageUploader.upload(profileImg) : null;
 
         userService.updateUserInfo(userId, nickname, profileImgUrl, statusMsg);
