@@ -17,7 +17,6 @@ public class AuthController {
     private final AuthService authService;
     private final LogoutService logoutService;
 
-    @CrossOrigin(origins = "*")
     @GetMapping("/callback")
     public ResponseEntity<AuthResponse> kakaoCallback(@RequestParam("code") String code,
         HttpServletResponse response) {
@@ -26,13 +25,11 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @CrossOrigin(origins = "*")
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok(logoutService.logout(request, response));
     }
 
-    @CrossOrigin(origins = "*")
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponse> refreshToken(
         @CookieValue(value = "refresh_token", required = true) String refreshToken,

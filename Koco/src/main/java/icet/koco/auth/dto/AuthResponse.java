@@ -1,5 +1,6 @@
 package icet.koco.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Data
@@ -18,6 +19,8 @@ public class AuthResponse {
     public static class AuthData {
         private String email;
         private String name;
+
+        @JsonProperty("isRegistered")
         private boolean isRegistered;
     }
 }
