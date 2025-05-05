@@ -8,5 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SolutionRepository extends JpaRepository<Solution, Long> {
     // 중복 여부 확인용
     boolean existsByProblem(Problem problem);
+
+    Optional<Solution> findByProblem(Problem problem);
+
 }
 
