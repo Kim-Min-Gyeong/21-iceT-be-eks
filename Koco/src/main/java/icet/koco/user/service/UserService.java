@@ -5,11 +5,19 @@ import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.auth.service.KakaoOAuthClient;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
+import icet.koco.problemSet.entity.ProblemSet;
+import icet.koco.problemSet.repository.ProblemSetRepository;
+import icet.koco.problemSet.repository.SolutionRepository;
+import icet.koco.problemSet.repository.SurveyRepository;
+import icet.koco.user.dto.DashboardResponseDto;
+import icet.koco.user.dto.UserCategoryStatProjection;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +33,8 @@ public class UserService {
     private final RedisTemplate<String, String> redisTemplate;
     private final OAuthRepository oAuthRepository;
     private final CookieUtil cookieUtil;
+    private final ProblemSetRepository problemSetRepository;
+    private final SurveyRepository surveyRepository;
 
     @Transactional
     public void deleteUser(Long userId, HttpServletResponse response) {
@@ -64,5 +74,34 @@ public class UserService {
         if (profileImgUrl != null) user.setProfileImgUrl(profileImgUrl);
         if (statusMsg != null) user.setStatusMsg(statusMsg);
     }
+
+    // 대시볻 조회 API
+    @Transactional(readOnly = true)
+    public DashboardResponseDto getUserDashboard(Long userId, LocalDate date) {
+        User user = userRepository.findById(userId).orElseThrow();
+        log.info("userId: {}", user.getId());
+        Long problemSetId = problemSetRepository.findByCreatedAt(date).map(ProblemSet::getId).orElse(null);
+
+        // 상위 5개의 알고리즘 분야 가져오기
+        List<UserCategoryStatProjection> projections = surveyRepository.calculateCorrectRateByCategory(userId);
+        List<DashboardResponseDto.CategoryStat> statDtos = projections.stream()
+            .limit(5)
+            .map(p -> DashboardResponseDto.CategoryStat.builder()
+                .categoryId(p.getCategoryId())
+                .categoryName(p.getCategoryName())
+                .correctRate(Math.round(p.getCorrectRate() * 1000) / 10.0)
+                .build())
+            .toList();
+
+        return DashboardResponseDto.builder()
+            .userId(user.getId())
+            .nickname(user.getNickname())
+            .statusMessage(user.getStatusMsg())
+            .profileImgUrl(user.getProfileImgUrl())
+            .todayProblemSetId(problemSetId)
+            .studyStats(statDtos)
+            .build();
+    }
+
 }
 

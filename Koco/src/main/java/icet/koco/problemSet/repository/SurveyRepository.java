@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface SurveyRepository extends JpaRepository<Survey, Long> {
+public interface SurveyRepository extends JpaRepository<Survey, Long>, SurveyRepositoryCustom {
 
-    // 방식 1: 설문 개수 비교
+// 방식 1: 설문 개수 비교
     long countByUserAndProblemSet(User user, ProblemSet problemSet);
 
     // 방식 2: 설문 작성된 문제 ID 목록 조회

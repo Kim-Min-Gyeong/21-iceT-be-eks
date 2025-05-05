@@ -1,5 +1,6 @@
 package icet.koco.problemSet.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import icet.koco.enums.DifficultyLevel;
 import icet.koco.user.entity.User;
 import jakarta.persistence.*;
@@ -47,6 +48,7 @@ public class Survey {
     private Problem problem;
 
     // 해결 여부
+    @JsonProperty("isSolved")
     @Column(name = "is_solved", nullable = false)
     private boolean isSolved;
 
