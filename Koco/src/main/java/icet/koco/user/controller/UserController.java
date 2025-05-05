@@ -65,9 +65,7 @@ public class UserController {
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboard(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         try {
-            System.out.println(">>>> dashboard API 진입");
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            System.out.println(">>> principal: " + principal + " / class: " + principal.getClass().getName());
 
             Long userId = Long.valueOf(principal.toString());
             DashboardResponseDto response = userService.getUserDashboard(userId, date);

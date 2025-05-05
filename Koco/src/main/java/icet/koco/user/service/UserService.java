@@ -5,6 +5,7 @@ import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.auth.service.KakaoOAuthClient;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
+import icet.koco.problemSet.entity.Category;
 import icet.koco.problemSet.entity.ProblemSet;
 import icet.koco.problemSet.repository.ProblemSetRepository;
 import icet.koco.problemSet.repository.SolutionRepository;
@@ -12,6 +13,8 @@ import icet.koco.problemSet.repository.SurveyRepository;
 import icet.koco.user.dto.DashboardResponseDto;
 import icet.koco.user.dto.UserCategoryStatProjection;
 import icet.koco.user.entity.User;
+import icet.koco.user.entity.UserAlgorithmStats;
+import icet.koco.user.repository.UserAlgorithmStatsRepository;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,6 +38,9 @@ public class UserService {
     private final CookieUtil cookieUtil;
     private final ProblemSetRepository problemSetRepository;
     private final SurveyRepository surveyRepository;
+    private final UserAlgorithmStatsRepository userAlgorithmStatsRepository;
+    private final UserAlgorithmStatsService userAlgorithmStatsService;
+
 
     @Transactional
     public void deleteUser(Long userId, HttpServletResponse response) {
@@ -75,16 +81,26 @@ public class UserService {
         if (statusMsg != null) user.setStatusMsg(statusMsg);
     }
 
-    // 대시볻 조회 API
-    @Transactional(readOnly = true)
+    @Transactional
     public DashboardResponseDto getUserDashboard(Long userId, LocalDate date) {
         User user = userRepository.findById(userId).orElseThrow();
         log.info("userId: {}", user.getId());
-        Long problemSetId = problemSetRepository.findByCreatedAt(date).map(ProblemSet::getId).orElse(null);
 
-        // 상위 5개의 알고리즘 분야 가져오기
-        List<UserCategoryStatProjection> projections = surveyRepository.calculateCorrectRateByCategory(userId);
-        List<DashboardResponseDto.CategoryStat> statDtos = projections.stream()
+        Long problemSetId = problemSetRepository.findByCreatedAt(date)
+            .map(ProblemSet::getId)
+            .orElse(null);
+
+        List<UserCategoryStatProjection> stats = surveyRepository.calculateCorrectRateByCategory(userId);
+
+        for (UserCategoryStatProjection stat : stats) {
+            userAlgorithmStatsService.upsertCorrectRate(
+                userId,
+                stat.getCategoryId(),
+                Math.round(stat.getCorrectRate() * 1000) / 10.0 // 소수 첫째 자리까지 반올림
+            );
+        }
+
+        List<DashboardResponseDto.CategoryStat> statDtos = stats.stream()
             .limit(5)
             .map(p -> DashboardResponseDto.CategoryStat.builder()
                 .categoryId(p.getCategoryId())
@@ -102,6 +118,5 @@ public class UserService {
             .studyStats(statDtos)
             .build();
     }
-
 }
 
