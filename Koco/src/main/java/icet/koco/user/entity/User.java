@@ -34,7 +34,7 @@ public class User {
     private String name;
 
     // 회원 닉네임
-    @Column(name = "nickname", nullable = false, length = 15)
+    @Column(name = "nickname", length = 15)
     private String nickname;
 
     // 회원 역할, 디폴트 값: user(일반)

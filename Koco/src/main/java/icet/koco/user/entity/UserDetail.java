@@ -52,14 +52,6 @@ public class UserDetail {
     @Column(name = "response_rate", nullable = false, columnDefinition = "DECIMAL(4, 1)")
     private Double responseRate;
 
-    // 전체 출석일수
-    @Column(name = "total_attendance", nullable = false)
-    private Integer totalAttendance;
-
-    // 연속 출석일수
-    @Column(name = "continuous_attendance", nullable = false)
-    private Integer continuousAttendance;
-
     // 갱신일자
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
