@@ -1,16 +1,10 @@
 package icet.koco.user.controller;
 
 import icet.koco.global.dto.ApiResponse;
-import icet.koco.global.dto.ErrorResponse;
-import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.user.dto.DashboardResponseDto;
 import icet.koco.user.dto.UserResponse;
 import icet.koco.user.service.UserService;
 import icet.koco.user.service.uploader.ImageUploader;
-import icet.koco.util.JwtTokenProvider;
-import icet.koco.util.TokenExtractor;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

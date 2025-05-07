@@ -68,6 +68,7 @@ public class AuthService {
                 .message("로그인 성공. 토큰 발급 완료")
                 .data(AuthResponse.AuthData.builder()
                     .email(user.getEmail())
+//                    .nickname(user.getNickname())
                     .name(user.getName())
                     .isRegistered(true)
                     .build())
@@ -77,6 +78,7 @@ public class AuthService {
         // 신규 회원
         User newUser = userRepository.save(User.builder()
             .email(kakaoUser.getEmail())
+//            .nickname(kakaoUser.getNickname())
             .name(kakaoUser.getName())
             .createdAt(LocalDateTime.now())
             .build());
@@ -108,6 +110,7 @@ public class AuthService {
             .message("로그인 성공. 토큰 발급 완료")
             .data(AuthResponse.AuthData.builder()
                 .email(newUser.getEmail())
+//                .nickname(newUser.getNickname())
                 .name(newUser.getName())
                 .isRegistered(false)
                 .build())
