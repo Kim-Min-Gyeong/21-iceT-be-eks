@@ -47,27 +47,27 @@ public class Problem {
     private String outputDescription;
 
     // 시간 제한 (ms 단위)
-    @Column(name = "time_limit", nullable = false)
+    @Column(name = "time_limit")
     private Integer timeLimit;
 
     // 메모리 제한 (MB 단위)
-    @Column(name = "memory_limit", nullable = false)
+    @Column(name = "memory_limit")
     private Integer memoryLimit;
 
     // 제출 수
-    @Column(name = "submission_cnt", nullable = false)
+    @Column(name = "submission_cnt")
     private Integer submissionCnt;
 
     // 정답 수
-    @Column(name = "answer_cnt", nullable = false)
+    @Column(name = "answer_cnt")
     private Integer answerCnt;
 
     // 맞춘 사람 수
-    @Column(name = "correct_ppl_cnt", nullable = false)
+    @Column(name = "correct_ppl_cnt")
     private Integer correctPplCnt;
 
     // 정답률 (소수점 3자리까지)
-    @Column(name = "correct_rate", nullable = false, columnDefinition = "DECIMAL(6,3)")
+    @Column(name = "correct_rate", columnDefinition = "DECIMAL(6,3)")
     private Double correctRate;
 
     // 예제 입력
