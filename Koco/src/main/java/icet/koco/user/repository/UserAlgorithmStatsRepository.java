@@ -13,5 +13,7 @@ public interface UserAlgorithmStatsRepository extends JpaRepository<UserAlgorith
     List<UserAlgorithmStats> findByUser(User user);
 
     // 특정 사용자 + 카테고리 통계 조회
+    Optional<UserAlgorithmStats> findByUserIdAndCategoryId(Long userId, Long categoryId);
+
     Optional<UserAlgorithmStats> findByUserAndCategory(User user, Category category);
 }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/problem-set/surveys")
+@RequestMapping("/api/backend/v1/problem-set/surveys")
 @RequiredArgsConstructor
 public class SurveyController {
 

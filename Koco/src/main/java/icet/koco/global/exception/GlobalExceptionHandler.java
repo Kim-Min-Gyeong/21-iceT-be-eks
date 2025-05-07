@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -43,6 +44,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse("INTERNAL_SERVER_ERROR", "서버에서 에러가 발생하였습니다", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // 파일 업로드 크기 5MB로 제한
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body("파일 크기가 제한을 초과했습니다.");
+    }
 
     // 공통 응답 생성 함수
     private ResponseEntity<ErrorResponse> buildErrorResponse(String code, String message, HttpStatus status) {

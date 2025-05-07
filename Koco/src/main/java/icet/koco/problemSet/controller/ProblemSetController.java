@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/problem-set")
+@RequestMapping("/api/backend/v1/problem-set")
 public class ProblemSetController {
 
     private final ProblemSetService problemSetService;
