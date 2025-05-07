@@ -29,7 +29,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/backend/v1/auth/**", "/swagger-ui/**",  "/api-docs","/v3/api-docs/**", "/swagger-resources/**", "/webjars/**")
+                .requestMatchers("/api/backend/v1/auth/**","/api/backend/v1/solution", "/swagger-ui/**",  "/api-docs","/v3/api-docs/**", "/swagger-resources/**", "/webjars/**")
                 .permitAll()
                 .anyRequest().authenticated()
             )
@@ -42,6 +42,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
+            "http://172.16.24.28:8000",  // FastAPI 서버 주소
             "http://localhost:5173",    // 프론트 로컬 주소
             "https://ktbkoco.com"       // 배포 도메인 주소
         ));
