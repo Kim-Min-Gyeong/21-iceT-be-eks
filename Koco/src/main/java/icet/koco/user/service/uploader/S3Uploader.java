@@ -32,8 +32,7 @@ public class S3Uploader implements ImageUploader {
             metadata.setContentLength(file.getSize());
             metadata.setContentType(file.getContentType());
 
-            amazonS3.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), metadata)
-                .withCannedAcl(CannedAccessControlList.PublicRead));
+            amazonS3.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), metadata));
 
             String url = amazonS3.getUrl(bucket, fileName).toString();
             System.out.println(">>> S3 업로드 완료: " + url);
