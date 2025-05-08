@@ -16,15 +16,21 @@ public class KakaoUserResponse {
     @Builder
     public static class KakaoAccount {
         private String email;
-        private String name;
+        private String nickname;
+//        private String name;
+
     }
 
     public String getEmail() {
         return kakao_account.getEmail();
     }
 
+//    public String getName() {
+//        return kakao_account.getName();
+//    }
+
     public String getName() {
-        return kakao_account.getName();
+        return kakao_account.getNickname();
     }
 
     public String getProviderId() {

@@ -1189,13 +1189,12 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>UKfy142i6qiv079490g6fkdh21w</UnderlyingIndexName>
     </key>
     <column id="331" parent="301" name="id">
-      <AutoIncrement>1</AutoIncrement>
+      <AutoIncrement>5</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>bigint|0s</StoredType>
     </column>
     <column id="332" parent="301" name="answer_cnt">
-      <NotNull>1</NotNull>
       <Position>2</Position>
       <StoredType>int|0s</StoredType>
     </column>
@@ -1205,12 +1204,10 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <StoredType>varchar(100)|0s</StoredType>
     </column>
     <column id="334" parent="301" name="correct_ppl_cnt">
-      <NotNull>1</NotNull>
       <Position>4</Position>
       <StoredType>int|0s</StoredType>
     </column>
     <column id="335" parent="301" name="correct_rate">
-      <NotNull>1</NotNull>
       <Position>5</Position>
       <StoredType>decimal(6,3 digit)|0s</StoredType>
     </column>
@@ -1230,7 +1227,6 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <StoredType>text|0s</StoredType>
     </column>
     <column id="339" parent="301" name="memory_limit">
-      <NotNull>1</NotNull>
       <Position>9</Position>
       <StoredType>int|0s</StoredType>
     </column>
@@ -1250,7 +1246,6 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <StoredType>text|0s</StoredType>
     </column>
     <column id="343" parent="301" name="submission_cnt">
-      <NotNull>1</NotNull>
       <Position>13</Position>
       <StoredType>int|0s</StoredType>
     </column>
@@ -1260,7 +1255,6 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <StoredType>varchar(20)|0s</StoredType>
     </column>
     <column id="345" parent="301" name="time_limit">
-      <NotNull>1</NotNull>
       <Position>15</Position>
       <StoredType>int|0s</StoredType>
     </column>
