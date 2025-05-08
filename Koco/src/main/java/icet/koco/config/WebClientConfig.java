@@ -13,8 +13,18 @@ public class WebClientConfig {
     @Value("${KAKAO_ADMIN_KEY}")
     private String adminKey;
 
+    // OAuth 인증용 (토큰 발급용)
     @Bean
-    public WebClient kakaoWebClient() {
+    public WebClient kakaoAuthClient() {
+        return WebClient.builder()
+            .baseUrl("https://kauth.kakao.com")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+            .build();
+    }
+
+    // 사용자 API 호출용
+    @Bean
+    public WebClient kakaoApiClient() {
         return WebClient.builder()
             .baseUrl("https://kapi.kakao.com")
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
