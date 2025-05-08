@@ -28,7 +28,9 @@ public class AuthService {
     private final RedisTemplate<String, String> redisTemplate;
 
     public AuthResponse loginWithKakao(String code, HttpServletResponse response) {
+        System.out.println(">>> Kakao Token Response 완료 직전");
         KakaoUserResponse kakaoUser = kakaoOAuthClient.getUserInfo(code);
+        System.out.println(">>> Kakao Token Response 완료 후");
         Optional<User> userOpt = userRepository.findByEmail(kakaoUser.getEmail());
         if (userOpt.isPresent()) {
             User user = userOpt.get();
