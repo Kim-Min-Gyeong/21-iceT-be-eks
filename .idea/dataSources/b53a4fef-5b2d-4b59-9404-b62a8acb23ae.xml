@@ -1744,7 +1744,6 @@ problem_id</ColNames>
       <StoredType>varchar(10)|0s</StoredType>
     </column>
     <column id="442" parent="310" name="nickname">
-      <NotNull>1</NotNull>
       <Position>6</Position>
       <StoredType>varchar(15)|0s</StoredType>
     </column>
