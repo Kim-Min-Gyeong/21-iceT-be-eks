@@ -33,6 +33,7 @@ public class UserController {
     private final UserService userService;
     private final ImageUploader imageUploader;
 
+    // 유저 탈퇴하기
     @DeleteMapping("/me")
     public ResponseEntity<ApiResponse<?>> deleteUser(HttpServletResponse response) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -41,6 +42,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    // 유저 정보 수정
     @PostMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserResponse> updateUserInfo(
         @RequestPart(value = "nickname", required = false) String nickname,
@@ -55,6 +57,7 @@ public class UserController {
         return ResponseEntity.ok(UserResponse.ofSuccess());
     }
 
+    // 유저 정보 조회
     @GetMapping(value = "/me")
     public ResponseEntity<?> getUserInfo() {
         try {

@@ -1,21 +1,17 @@
 package icet.koco.user.service;
 
-import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.auth.service.KakaoOAuthClient;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
-import icet.koco.problemSet.entity.Category;
 import icet.koco.problemSet.entity.ProblemSet;
 import icet.koco.problemSet.repository.ProblemSetRepository;
-import icet.koco.problemSet.repository.SolutionRepository;
 import icet.koco.problemSet.repository.SurveyRepository;
 import icet.koco.user.dto.DashboardResponseDto;
 import icet.koco.user.dto.UserCategoryStatProjection;
 import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.entity.User;
-import icet.koco.user.entity.UserAlgorithmStats;
 import icet.koco.user.repository.UserAlgorithmStatsRepository;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.CookieUtil;
@@ -44,6 +40,11 @@ public class UserService {
     private final UserAlgorithmStatsService userAlgorithmStatsService;
 
 
+    /**
+     * 유저 탈퇴
+     * @param userId
+     * @param response
+     */
     @Transactional
     public void deleteUser(Long userId, HttpServletResponse response) {
         // 1. 유저 조회
@@ -73,6 +74,13 @@ public class UserService {
         cookieUtil.invalidateCookie(response, "refresh_token");
     }
 
+    /**
+     * 유저 정보 수정(업데이트)
+     * @param userId
+     * @param nickname
+     * @param profileImgUrl
+     * @param statusMsg
+     */
     @Transactional
     public void updateUserInfo(Long userId, String nickname, String profileImgUrl, String statusMsg) {
         User user = userRepository.findById(userId)
@@ -83,7 +91,11 @@ public class UserService {
         if (statusMsg != null) user.setStatusMsg(statusMsg);
     }
 
-    // 사용자 정보 반환 (userId, nickname, statusMsg, profileImgUrl)
+    /**
+     * 유저 정보 조회
+     * @param userId
+     * @return
+     */
     @Transactional(readOnly = true)
     public UserInfoResponseDto getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
@@ -97,6 +109,7 @@ public class UserService {
                 .build();
     }
 
+    // userAlgorithmStats 조회 API
     @Transactional
     public DashboardResponseDto getUserDashboard(Long userId, LocalDate date) {
         User user = userRepository.findById(userId).orElseThrow();
