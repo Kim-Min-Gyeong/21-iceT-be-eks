@@ -1,14 +1,16 @@
 package icet.koco.user.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
+@Builder
 @Getter
 @AllArgsConstructor
 public class UserCategoryStatDto implements UserCategoryStatProjection {
     private Long categoryId;
     private String categoryName;
-    private Double correctRate;
+    private Integer correctRate;
 
     @Override
     public Long getCategoryId() {
@@ -21,7 +23,7 @@ public class UserCategoryStatDto implements UserCategoryStatProjection {
     }
 
     @Override
-    public Double getCorrectRate() {
+    public Integer getCorrectRate() {
         return correctRate;
     }
 }

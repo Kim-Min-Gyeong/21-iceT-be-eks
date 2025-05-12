@@ -8,14 +8,17 @@ import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.problemSet.repository.ProblemSetRepository;
 import icet.koco.problemSet.repository.SurveyRepository;
 import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
+import icet.koco.user.dto.UserCategoryStatDto;
 import icet.koco.user.dto.UserCategoryStatProjection;
 import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.entity.User;
+import icet.koco.user.entity.UserAlgorithmStats;
 import icet.koco.user.repository.UserAlgorithmStatsRepository;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -108,33 +111,29 @@ public class UserService {
     }
 
     // userAlgorithmStats 조회 API
-    @Transactional
+    @Transactional(readOnly = true)
     public UserAlgorithmStatsResponseDto getAlgorithmStats(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow();
-        log.info("userId: {}", user.getId());
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+            .orElseThrow(() -> new UnauthorizedException("존재하지 않는 사용자입니다."));
 
-        List<UserCategoryStatProjection> stats = surveyRepository.calculateCorrectRateByCategory(userId);
+        List<UserAlgorithmStats> stats = userAlgorithmStatsRepository.findByUserId(userId);
 
-        for (UserCategoryStatProjection stat : stats) {
-            userAlgorithmStatsService.upsertCorrectRate(
-                userId,
-                stat.getCategoryId(),
-                Math.round(stat.getCorrectRate() * 1000) / 10.0 // 소수 첫째 자리까지 반올림
-            );
-        }
-
-        List<UserAlgorithmStatsResponseDto.CategoryStat> statDtos = stats.stream()
+        // 정답률 기준 내림차순 정렬 후 상위 5개만 추출
+        List<UserAlgorithmStatsResponseDto.CategoryStat> topStats = stats.stream()
+            .sorted(Comparator.comparingInt(UserAlgorithmStats::getCorrectRate).reversed())
             .limit(5)
-            .map(p -> UserAlgorithmStatsResponseDto.CategoryStat.builder()
-                .categoryId(p.getCategoryId())
-                .categoryName(p.getCategoryName())
-                .correctRate(Math.round(p.getCorrectRate() * 1000) / 10.0)
+            .map(s -> UserAlgorithmStatsResponseDto.CategoryStat.builder()
+                .categoryId(s.getCategory().getId())
+                .categoryName(s.getCategory().getName())
+                .correctRate(s.getCorrectRate())
                 .build())
             .toList();
 
         return UserAlgorithmStatsResponseDto.builder()
-            .studyStats(statDtos)
+            .studyStats(topStats)
             .build();
+
     }
+
 }
 

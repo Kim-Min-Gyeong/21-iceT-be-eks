@@ -14,6 +14,6 @@ public class UserAlgorithmStatsResponseDto {
     public static class CategoryStat {
         private Long categoryId;
         private String categoryName;
-        private Double correctRate;
+        private Integer correctRate;
     }
 }

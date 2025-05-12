@@ -6,6 +6,9 @@ import icet.koco.problemSet.entity.Category;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface UserAlgorithmStatsRepository extends JpaRepository<UserAlgorithmStats, Long> {
 
@@ -16,4 +19,10 @@ public interface UserAlgorithmStatsRepository extends JpaRepository<UserAlgorith
     Optional<UserAlgorithmStats> findByUserIdAndCategoryId(Long userId, Long categoryId);
 
     Optional<UserAlgorithmStats> findByUserAndCategory(User user, Category category);
+
+    List<UserAlgorithmStats> findByUserId(Long userId);
+
+    @Modifying
+    @Query("DELETE FROM UserAlgorithmStats u WHERE u.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }
