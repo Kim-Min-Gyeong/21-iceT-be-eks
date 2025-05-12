@@ -5,10 +5,9 @@ import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.auth.service.KakaoOAuthClient;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
-import icet.koco.problemSet.entity.ProblemSet;
 import icet.koco.problemSet.repository.ProblemSetRepository;
 import icet.koco.problemSet.repository.SurveyRepository;
-import icet.koco.user.dto.DashboardResponseDto;
+import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
 import icet.koco.user.dto.UserCategoryStatProjection;
 import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.entity.User;
@@ -16,7 +15,6 @@ import icet.koco.user.repository.UserAlgorithmStatsRepository;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -111,13 +109,9 @@ public class UserService {
 
     // userAlgorithmStats 조회 API
     @Transactional
-    public DashboardResponseDto getUserDashboard(Long userId, LocalDate date) {
+    public UserAlgorithmStatsResponseDto getAlgorithmStats(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
         log.info("userId: {}", user.getId());
-
-        Long problemSetId = problemSetRepository.findByCreatedAt(date)
-            .map(ProblemSet::getId)
-            .orElse(null);
 
         List<UserCategoryStatProjection> stats = surveyRepository.calculateCorrectRateByCategory(userId);
 
@@ -129,21 +123,16 @@ public class UserService {
             );
         }
 
-        List<DashboardResponseDto.CategoryStat> statDtos = stats.stream()
+        List<UserAlgorithmStatsResponseDto.CategoryStat> statDtos = stats.stream()
             .limit(5)
-            .map(p -> DashboardResponseDto.CategoryStat.builder()
+            .map(p -> UserAlgorithmStatsResponseDto.CategoryStat.builder()
                 .categoryId(p.getCategoryId())
                 .categoryName(p.getCategoryName())
                 .correctRate(Math.round(p.getCorrectRate() * 1000) / 10.0)
                 .build())
             .toList();
 
-        return DashboardResponseDto.builder()
-            .userId(user.getId())
-            .nickname(user.getNickname())
-            .statusMessage(user.getStatusMsg())
-            .profileImgUrl(user.getProfileImgUrl())
-            .todayProblemSetId(problemSetId)
+        return UserAlgorithmStatsResponseDto.builder()
             .studyStats(statDtos)
             .build();
     }

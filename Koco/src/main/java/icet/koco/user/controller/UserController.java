@@ -1,16 +1,14 @@
 package icet.koco.user.controller;
 
 import icet.koco.global.dto.ApiResponse;
-import icet.koco.user.dto.DashboardResponseDto;
+import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
 import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.dto.UserResponse;
 import icet.koco.user.service.UserService;
 import icet.koco.user.service.uploader.ImageUploader;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -71,14 +68,14 @@ public class UserController {
     }
 
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<?> getDashboard(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    @GetMapping("/algorithm-stats")
+    public ResponseEntity<?> getAlgorithmStats () {
         try {
             Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            DashboardResponseDto response = userService.getUserDashboard(userId, date);
-            return ResponseEntity.ok(ApiResponse.success("USER_DASHBOARD_GET_SUCCESS", "유저 프로필 정보 조회 성공", response));
+            UserAlgorithmStatsResponseDto response = userService.getAlgorithmStats(userId);
+            return ResponseEntity.ok(ApiResponse.success("USER_ALGORITHM_STATS_GET_SUCCESS", "유저 알고리즘 스탯 정보 조회 성공", response));
         } catch (Exception e) {
-            log.error("대시보드 API 에러 발생", e);
+            log.error("사용자 알고리즘 스탯 조회 API 에러 발생", e);
             e.printStackTrace(); // 콘솔에 전체 에러 출력
             return ResponseEntity.internalServerError().body(ApiResponse.fail("INTERNAL_SERVER_ERROR", "서버 내부 에러"));
         }

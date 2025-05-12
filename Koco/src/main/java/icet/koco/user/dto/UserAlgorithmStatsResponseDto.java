@@ -6,12 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class DashboardResponseDto {
-    private Long userId;
-    private String nickname;
-    private String statusMessage;
-    private String profileImgUrl;
-    private Long todayProblemSetId;
+public class UserAlgorithmStatsResponseDto {
     private List<CategoryStat> studyStats;
 
     @Getter
