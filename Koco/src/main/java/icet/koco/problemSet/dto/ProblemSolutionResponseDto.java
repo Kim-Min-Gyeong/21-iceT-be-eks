@@ -7,6 +7,7 @@ import java.util.Map;
 @Getter
 @Builder
 public class ProblemSolutionResponseDto {
+    private String bojUrl;
     private Long problemNumber;
     private String tier;
     private String title;
