@@ -1,5 +1,6 @@
 package icet.koco.user.service;
 
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.auth.service.KakaoOAuthClient;
@@ -12,6 +13,7 @@ import icet.koco.problemSet.repository.SolutionRepository;
 import icet.koco.problemSet.repository.SurveyRepository;
 import icet.koco.user.dto.DashboardResponseDto;
 import icet.koco.user.dto.UserCategoryStatProjection;
+import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.entity.User;
 import icet.koco.user.entity.UserAlgorithmStats;
 import icet.koco.user.repository.UserAlgorithmStatsRepository;
@@ -79,6 +81,20 @@ public class UserService {
         if (nickname != null) user.setNickname(nickname);
         if (profileImgUrl != null) user.setProfileImgUrl(profileImgUrl);
         if (statusMsg != null) user.setStatusMsg(statusMsg);
+    }
+
+    // 사용자 정보 반환 (userId, nickname, statusMsg, profileImgUrl)
+    @Transactional(readOnly = true)
+    public UserInfoResponseDto getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+
+        return UserInfoResponseDto.builder()
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .statusMessage(user.getStatusMsg())
+                .profileImageUrl(user.getProfileImgUrl())
+                .build();
     }
 
     @Transactional

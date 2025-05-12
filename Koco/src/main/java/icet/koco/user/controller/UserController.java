@@ -2,6 +2,7 @@ package icet.koco.user.controller;
 
 import icet.koco.global.dto.ApiResponse;
 import icet.koco.user.dto.DashboardResponseDto;
+import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.dto.UserResponse;
 import icet.koco.user.service.UserService;
 import icet.koco.user.service.uploader.ImageUploader;
@@ -54,18 +55,29 @@ public class UserController {
         return ResponseEntity.ok(UserResponse.ofSuccess());
     }
 
+    @GetMapping(value = "/me")
+    public ResponseEntity<?> getUserInfo() {
+        try {
+            Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            UserInfoResponseDto userInfoResponseDto = userService.getUserInfo(userId);
+            return ResponseEntity.ok(ApiResponse.success("USER_INFO_GET_SUCCESS", "유저 프로필 정보 조회 성공", userInfoResponseDto));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.fail("SERVER_ERROR", "서버 에러"));
+        }
+    }
+
+
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboard(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         try {
-            Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-            Long userId = Long.valueOf(principal.toString());
+            Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             DashboardResponseDto response = userService.getUserDashboard(userId, date);
             return ResponseEntity.ok(ApiResponse.success("USER_DASHBOARD_GET_SUCCESS", "유저 프로필 정보 조회 성공", response));
         } catch (Exception e) {
             log.error("대시보드 API 에러 발생", e);
             e.printStackTrace(); // 콘솔에 전체 에러 출력
-            return ResponseEntity.internalServerError().body(ApiResponse.fail("INTERNAL_SERVER_ERROR", "셔벼 내부 에러"));
+            return ResponseEntity.internalServerError().body(ApiResponse.fail("INTERNAL_SERVER_ERROR", "서버 내부 에러"));
         }
     }
 
