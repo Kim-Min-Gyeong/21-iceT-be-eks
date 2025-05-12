@@ -5,20 +5,16 @@ import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.auth.service.KakaoOAuthClient;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
-import icet.koco.problemSet.entity.Category;
-import icet.koco.problemSet.entity.ProblemSet;
 import icet.koco.problemSet.repository.ProblemSetRepository;
-import icet.koco.problemSet.repository.SolutionRepository;
 import icet.koco.problemSet.repository.SurveyRepository;
-import icet.koco.user.dto.DashboardResponseDto;
+import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
 import icet.koco.user.dto.UserCategoryStatProjection;
+import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.entity.User;
-import icet.koco.user.entity.UserAlgorithmStats;
 import icet.koco.user.repository.UserAlgorithmStatsRepository;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +38,11 @@ public class UserService {
     private final UserAlgorithmStatsService userAlgorithmStatsService;
 
 
+    /**
+     * 유저 탈퇴
+     * @param userId
+     * @param response
+     */
     @Transactional
     public void deleteUser(Long userId, HttpServletResponse response) {
         // 1. 유저 조회
@@ -71,6 +72,13 @@ public class UserService {
         cookieUtil.invalidateCookie(response, "refresh_token");
     }
 
+    /**
+     * 유저 정보 수정(업데이트)
+     * @param userId
+     * @param nickname
+     * @param profileImgUrl
+     * @param statusMsg
+     */
     @Transactional
     public void updateUserInfo(Long userId, String nickname, String profileImgUrl, String statusMsg) {
         User user = userRepository.findById(userId)
@@ -81,14 +89,29 @@ public class UserService {
         if (statusMsg != null) user.setStatusMsg(statusMsg);
     }
 
+    /**
+     * 유저 정보 조회
+     * @param userId
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public UserInfoResponseDto getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+
+        return UserInfoResponseDto.builder()
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .statusMessage(user.getStatusMsg())
+                .profileImageUrl(user.getProfileImgUrl())
+                .build();
+    }
+
+    // userAlgorithmStats 조회 API
     @Transactional
-    public DashboardResponseDto getUserDashboard(Long userId, LocalDate date) {
+    public UserAlgorithmStatsResponseDto getAlgorithmStats(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
         log.info("userId: {}", user.getId());
-
-        Long problemSetId = problemSetRepository.findByCreatedAt(date)
-            .map(ProblemSet::getId)
-            .orElse(null);
 
         List<UserCategoryStatProjection> stats = surveyRepository.calculateCorrectRateByCategory(userId);
 
@@ -100,21 +123,16 @@ public class UserService {
             );
         }
 
-        List<DashboardResponseDto.CategoryStat> statDtos = stats.stream()
+        List<UserAlgorithmStatsResponseDto.CategoryStat> statDtos = stats.stream()
             .limit(5)
-            .map(p -> DashboardResponseDto.CategoryStat.builder()
+            .map(p -> UserAlgorithmStatsResponseDto.CategoryStat.builder()
                 .categoryId(p.getCategoryId())
                 .categoryName(p.getCategoryName())
                 .correctRate(Math.round(p.getCorrectRate() * 1000) / 10.0)
                 .build())
             .toList();
 
-        return DashboardResponseDto.builder()
-            .userId(user.getId())
-            .nickname(user.getNickname())
-            .statusMessage(user.getStatusMsg())
-            .profileImgUrl(user.getProfileImgUrl())
-            .todayProblemSetId(problemSetId)
+        return UserAlgorithmStatsResponseDto.builder()
             .studyStats(statDtos)
             .build();
     }

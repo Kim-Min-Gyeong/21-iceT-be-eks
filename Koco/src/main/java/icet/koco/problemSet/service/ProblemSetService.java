@@ -79,6 +79,7 @@ public class ProblemSetService {
             .orElseThrow(() -> new ResourceNotFoundException("해당 문제에 대한 해설이 없습니다."));
 
         return ProblemSolutionResponseDto.builder()
+            .bojUrl(problem.getBojUrl())
             .problemNumber(problem.getNumber())
             .tier(problem.getTier())
             .title(problem.getTitle())
