@@ -15,6 +15,7 @@ import icet.koco.problemSet.repository.ProblemSetRepository;
 import icet.koco.problemSet.repository.SurveyRepository;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
+import icet.koco.user.service.UserAlgorithmStatsService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class SurveyService {
+
+    private final UserAlgorithmStatsService userAlgorithmStatsService;
 
     private final UserRepository userRepository;
     private final ProblemSetRepository problemSetRepository;
@@ -73,6 +76,9 @@ public class SurveyService {
 
         // 디비에 넣기 한 번에 수행
         List<Survey> savedSurveys = surveyRepository.saveAll(surveysToSave);
+
+        // 사용자 알고리즘 통계 업데이트
+        userAlgorithmStatsService.updateStatsFromSurveys(userId);
 
         List<Long> savedIds = savedSurveys.stream()
             .map(Survey::getId)

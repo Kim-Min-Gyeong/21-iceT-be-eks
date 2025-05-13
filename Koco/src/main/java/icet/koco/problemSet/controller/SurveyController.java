@@ -1,5 +1,6 @@
 package icet.koco.problemSet.controller;
 
+import icet.koco.global.dto.ApiResponse;
 import icet.koco.problemSet.dto.ProblemSetSurveyRequestDto;
 import icet.koco.problemSet.dto.SurveyResponseDto;
 import icet.koco.problemSet.service.SurveyService;
@@ -20,11 +21,14 @@ public class SurveyController {
     private final SurveyService surveyService;
 
     @PostMapping
-    public ResponseEntity<SurveyResponseDto> submitSurvey(
+    public ResponseEntity<ApiResponse<SurveyResponseDto>> submitSurvey(
         @RequestBody ProblemSetSurveyRequestDto requestDto) {
+
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println(">>>>> Controller userId: " + userId);
         SurveyResponseDto response = surveyService.submitSurvey(userId, requestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+            ApiResponse.success("SURVEY_CREATED", "출제 문제집에 대한 설문응답이 성공적으로 생성되었습니다.", response)
+        );
     }
 }
