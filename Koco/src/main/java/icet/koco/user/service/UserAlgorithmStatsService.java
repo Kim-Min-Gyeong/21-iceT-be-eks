@@ -56,17 +56,15 @@ public class UserAlgorithmStatsService {
         }
     }
 
+    // updateStatsFromSurveys - 비선형 정규화 (x^0.6 방식) 적용
     @Transactional
     public void updateStatsFromSurveys(Long userId) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
-        // 기존 통계 삭제
         userAlgorithmStatsRepository.deleteByUserId(userId);
 
-        // 해당 유저의 설문 목록 조회
         List<Survey> surveys = surveyRepository.findByUserId(userId);
-
         if (surveys.isEmpty()) {
             log.info(">>>>> 유저 {} 의 설문 데이터 없음, 통계 생략", userId);
             return;
@@ -80,14 +78,14 @@ public class UserAlgorithmStatsService {
 
         // 문제 ID -> 카테고리 ID 리스트 매핑
         Map<Long, List<Long>> problemToCategoryMap = problemCategoryRepository.findAll().stream()
-            .collect(Collectors.groupingBy(
-                pc -> pc.getProblem().getId(),
-                Collectors.mapping(pc -> pc.getCategory().getId(), Collectors.toList())
-            ));
+                .collect(Collectors.groupingBy(
+                        pc -> pc.getProblem().getId(),
+                        Collectors.mapping(pc -> pc.getCategory().getId(), Collectors.toList())
+                ));
 
         // 카테고리별 맞은 문제 수 집계
         Map<Long, Integer> categoryCorrectCount = new HashMap<>();
-        int totalCorrect = 0;
+        int maxCorrect = 0;
 
         for (Map.Entry<Long, Boolean> entry : problemSolvedMap.entrySet()) {
             Long problemId = entry.getKey();
@@ -97,32 +95,35 @@ public class UserAlgorithmStatsService {
 
             List<Long> categoryIds = problemToCategoryMap.getOrDefault(problemId, List.of());
             for (Long categoryId : categoryIds) {
-                categoryCorrectCount.put(categoryId, categoryCorrectCount.getOrDefault(categoryId, 0) + 1);
-                totalCorrect++;
+                int newCount = categoryCorrectCount.getOrDefault(categoryId, 0) + 1;
+                categoryCorrectCount.put(categoryId, newCount);
+                maxCorrect = Math.max(maxCorrect, newCount);
             }
         }
 
-        // 통계 저장
+        // 통계 저장 - x^0.6 정규화 방식 사용
         List<UserAlgorithmStats> statsToSave = new ArrayList<>();
         for (Map.Entry<Long, Integer> entry : categoryCorrectCount.entrySet()) {
             Long categoryId = entry.getKey();
             int correct = entry.getValue();
-            double correctRatio = totalCorrect > 0 ? (correct * 100.0 / totalCorrect) : 0.0;
+
+            double normalized = (Math.pow(correct, 0.6) / Math.pow(maxCorrect, 0.6)) * 100.0;
+            int capped = Math.min(95, (int) Math.round(normalized));
 
             Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 카테고리를 찾을 수 없습니다. " + categoryId));
+                    .orElseThrow(() -> new IllegalArgumentException("해당 카테고리를 찾을 수 없습니다. " + categoryId));
 
             UserAlgorithmStats stats = UserAlgorithmStats.builder()
-                .user(user)
-                .category(category)
-                .correctRate((int) Math.round(correctRatio)) // 비중 기반
-                .build();
+                    .user(user)
+                    .category(category)
+                    .correctRate(capped) // x^0.6 정규화 적용
+                    .build();
 
             statsToSave.add(stats);
         }
 
         userAlgorithmStatsRepository.saveAll(statsToSave);
-        log.info(">>>>> 유저 {} 알고리즘 통계 {}건 저장 완료", userId, statsToSave.size());
+        log.info(">>>>> 유저 {} 알고리즘 통계 {}건 저장 완료 (정규화 방식 적용)", userId, statsToSave.size());
     }
 
 }
