@@ -87,9 +87,26 @@ public class UserService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
 
-        if (nickname != null) user.setNickname(nickname);
-        if (profileImgUrl != null) user.setProfileImgUrl(profileImgUrl);
-        if (statusMsg != null) user.setStatusMsg(statusMsg);
+        String userName = user.getName();
+
+        if (nickname != null) {
+            user.setNickname(nickname);
+        } else {
+            user.setNickname(userName);
+        }
+
+        if (profileImgUrl != null) {
+            user.setProfileImgUrl(profileImgUrl);
+        } else {
+            user.setProfileImgUrl(null);
+        }
+
+        if (statusMsg != null) {
+            user.setStatusMsg(statusMsg);
+        } else {
+            user.setStatusMsg(null);
+        }
+        userRepository.save(user);
     }
 
     /**
