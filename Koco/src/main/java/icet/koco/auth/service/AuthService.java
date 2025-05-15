@@ -98,6 +98,7 @@ public class AuthService {
             User newUser = userRepository.save(User.builder()
                 .email(kakaoUser.getEmail())
                 .name(kakaoUser.getName())
+                .nickname(kakaoUser.getName())
                 .createdAt(LocalDateTime.now())
                 .build());
             System.out.println(">>> 신규 유저 DB 저장 완료: " + newUser.getId());
