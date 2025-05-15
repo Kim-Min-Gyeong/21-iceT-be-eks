@@ -6,6 +6,8 @@ import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.dto.UserResponse;
 import icet.koco.user.service.UserService;
 import icet.koco.user.service.uploader.ImageUploader;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
+@Tag(name = "User", description = "사용자 관련 API")
 @RequestMapping("/api/backend/v1/users")
 @RequiredArgsConstructor
 public class UserController {
@@ -31,6 +34,7 @@ public class UserController {
     private final ImageUploader imageUploader;
 
     // 유저 탈퇴하기
+    @Operation(summary = "사용자 탈퇴")
     @DeleteMapping("/me")
     public ResponseEntity<ApiResponse<?>> deleteUser(HttpServletResponse response) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -39,7 +43,8 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // 유저 정보 수정
+    // 유저 정보 등록
+    @Operation(summary = "사용자 정보 등록")
     @PostMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserResponse> updateUserInfo(
         @RequestPart(value = "nickname", required = false) String nickname,
@@ -55,6 +60,7 @@ public class UserController {
     }
 
     // 유저 정보 조회
+    @Operation(summary = "사용자 정보 조회")
     @GetMapping(value = "/me")
     public ResponseEntity<?> getUserInfo() {
         try {
@@ -68,6 +74,7 @@ public class UserController {
     }
 
 
+    @Operation(summary = "사용자별 알고리즘 통계 조회")
     @GetMapping("/algorithm-stats")
     public ResponseEntity<?> getAlgorithmStats () {
         try {
