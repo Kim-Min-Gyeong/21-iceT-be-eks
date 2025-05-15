@@ -6,6 +6,9 @@ import icet.koco.problemSet.dto.ProblemSetResponseDto;
 import icet.koco.problemSet.dto.ProblemSolutionResponseDto;
 import icet.koco.problemSet.service.ProblemSetService;
 import java.time.LocalDate;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "ProblemSet", description = "문제집 관련 API")
 @RequestMapping("/api/backend/v1/problem-set")
 public class ProblemSetController {
 
     private final ProblemSetService problemSetService;
 
+    @Operation(summary = "날짜별 문제집 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<ProblemSetResponseDto>> getProblemSetByDate(
         @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -35,6 +40,7 @@ public class ProblemSetController {
         );
     }
 
+    @Operation(summary = "문제 별 해설 조회")
     @GetMapping("/{problemNumber}/solution")
     public ResponseEntity<?> getProblemSolution(@PathVariable Long problemNumber) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
