@@ -89,23 +89,10 @@ public class UserService {
 
         String userName = user.getName();
 
-        if (nickname != null) {
-            user.setNickname(nickname);
-        } else {
-            user.setNickname(userName);
-        }
-
-        if (profileImgUrl != null) {
-            user.setProfileImgUrl(profileImgUrl);
-        } else {
-            user.setProfileImgUrl(null);
-        }
-
-        if (statusMsg != null) {
-            user.setStatusMsg(statusMsg);
-        } else {
-            user.setStatusMsg(null);
-        }
+        user.setNickname(nickname!=null?nickname:userName);
+        user.setProfileImgUrl(profileImgUrl);
+        user.setStatusMsg(statusMsg);
+        
         userRepository.save(user);
     }
 
