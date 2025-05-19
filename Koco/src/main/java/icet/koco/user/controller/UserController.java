@@ -11,16 +11,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.*;
 
 
 @Slf4j
@@ -43,21 +36,24 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // 유저 정보 등록
-    @Operation(summary = "사용자 정보 등록")
-    @PostMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserResponse> updateUserInfo(
-        @RequestPart(value = "nickname", required = false) String nickname,
-        @RequestPart(value = "statusMsg", required = false) String statusMsg,
-        @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) {
+
+    @Operation(summary = "유저 정보 등록")
+    @PostMapping(value = "/me")
+    public ResponseEntity<?> postUserInfo(
+            @RequestParam(value = "nickname", required = false) String nickname,
+            @RequestParam(value = "statusMsg", required = false) String statusMsg,
+            @RequestParam(value = "profileImgUrl", required = false) String profileImgUrl) {
+        System.out.println("nickname: " + nickname);
+        System.out.println("statusMsg: " + statusMsg);
+        System.out.println("profileImgUrl: " + profileImgUrl);
 
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String profileImgUrl = (profileImg != null && !profileImg.isEmpty()) ? imageUploader.upload(profileImg) : null;
 
-        userService.updateUserInfo(userId, nickname, profileImgUrl, statusMsg);
+        userService.postUserInfo(userId, nickname, profileImgUrl, statusMsg);
 
         return ResponseEntity.ok(UserResponse.ofSuccess());
     }
+
 
     // 유저 정보 조회
     @Operation(summary = "사용자 정보 조회")
@@ -76,7 +72,7 @@ public class UserController {
 
     @Operation(summary = "사용자별 알고리즘 통계 조회")
     @GetMapping("/algorithm-stats")
-    public ResponseEntity<?> getAlgorithmStats () {
+    public ResponseEntity<?> getAlgorithmStats() {
         try {
             Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             UserAlgorithmStatsResponseDto response = userService.getAlgorithmStats(userId);
@@ -87,5 +83,4 @@ public class UserController {
             return ResponseEntity.internalServerError().body(ApiResponse.fail("INTERNAL_SERVER_ERROR", "서버 내부 에러"));
         }
     }
-
 }
