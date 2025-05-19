@@ -89,23 +89,24 @@ public class UserService {
 
         String userName = user.getName();
 
-        if (nickname != null) {
-            user.setNickname(nickname);
-        } else {
-            user.setNickname(userName);
-        }
+        user.setNickname(nickname!=null?nickname:userName);
+        user.setProfileImgUrl(profileImgUrl);
+        user.setStatusMsg(statusMsg);
 
-        if (profileImgUrl != null) {
-            user.setProfileImgUrl(profileImgUrl);
-        } else {
-            user.setProfileImgUrl(null);
-        }
+        userRepository.save(user);
+    }
 
-        if (statusMsg != null) {
-            user.setStatusMsg(statusMsg);
-        } else {
-            user.setStatusMsg(null);
-        }
+    @Transactional
+    public void postUserInfo(Long userId, String nickname, String profileImgUrl, String statusMsg) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new RuntimeException("유저를 찾을 수 없습니다."));
+
+        String userName = user.getName();
+
+        user.setNickname(nickname!=null?nickname:userName);         // 혹시 nickname이 안 들어오면 name으로 저장
+        user.setProfileImgUrl(profileImgUrl);
+        user.setStatusMsg(statusMsg);
+
         userRepository.save(user);
     }
 
