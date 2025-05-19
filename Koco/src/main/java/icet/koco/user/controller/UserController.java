@@ -5,7 +5,7 @@ import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
 import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.dto.UserResponse;
 import icet.koco.user.service.UserService;
-import icet.koco.user.service.uploader.ImageUploader;
+import icet.koco.util.uploader.ImageUploader;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
