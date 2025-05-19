@@ -2,6 +2,8 @@ package icet.koco.util.uploader;
 
 import icet.koco.global.dto.ApiResponse;
 import icet.koco.util.uploader.dto.S3UrlResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +18,15 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/backend/v1/upload")
+@Tag(name = "S3 Presigned URL", description = "Presigned URL 관련 API")
 public class S3UploadController {
 
     private final S3PresignedUrlService s3Service;
 
+    @Operation(summary = "presigned-url 제공")
     @GetMapping("/presigned-url")
-    public ResponseEntity<?> getPresignedUrl(@RequestParam String originalFileName) {
-        String uuidFileName = UUID.randomUUID() + "_" + originalFileName;
+    public ResponseEntity<?> getPresignedUrl(@RequestParam String fileName) {
+        String uuidFileName = UUID.randomUUID() + "_" + fileName;
 
         String presignedUrl = s3Service.generatePresignedUrl(uuidFileName);
         String fileUrl = s3Service.getFileUrl(uuidFileName);

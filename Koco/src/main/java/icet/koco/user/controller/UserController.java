@@ -5,7 +5,6 @@ import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
 import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.dto.UserResponse;
 import icet.koco.user.service.UserService;
-import icet.koco.util.uploader.ImageUploader;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    private final ImageUploader imageUploader;
 
     // 유저 탈퇴하기
     @Operation(summary = "사용자 탈퇴")
