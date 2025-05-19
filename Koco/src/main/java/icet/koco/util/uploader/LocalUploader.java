@@ -1,4 +1,4 @@
-package icet.koco.user.service.uploader;
+package icet.koco.util.uploader;
 
 import java.io.IOException;
 import java.nio.file.*;

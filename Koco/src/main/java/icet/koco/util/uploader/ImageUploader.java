@@ -1,4 +1,4 @@
-package icet.koco.user.service.uploader;
+package icet.koco.util.uploader;
 
 import org.springframework.web.multipart.MultipartFile;
 
