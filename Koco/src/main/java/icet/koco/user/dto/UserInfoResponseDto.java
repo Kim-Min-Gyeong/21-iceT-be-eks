@@ -8,6 +8,6 @@ import lombok.Getter;
 public class UserInfoResponseDto {
     private Long userId;
     private String nickname;
-    private String statusMessage;
-    private String profileImageUrl;
+    private String statusMsg;
+    private String profileImgUrl;
 }

@@ -35,11 +35,7 @@ public class UserService {
     private final RedisTemplate<String, String> redisTemplate;
     private final OAuthRepository oAuthRepository;
     private final CookieUtil cookieUtil;
-    private final ProblemSetRepository problemSetRepository;
-    private final SurveyRepository surveyRepository;
     private final UserAlgorithmStatsRepository userAlgorithmStatsRepository;
-    private final UserAlgorithmStatsService userAlgorithmStatsService;
-
 
     /**
      * 유저 탈퇴
@@ -83,21 +79,35 @@ public class UserService {
      * @param statusMsg
      */
     @Transactional
-    public void updateUserInfo(Long userId, String nickname, String profileImgUrl, String statusMsg) {
+    public void updateUserInfo(Long userId, String nickname, String statusMsg, String profileImgUrl) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
 
-        String userName = user.getName();
+        if (nickname != null) {
+            user.setNickname(nickname);
+        }
 
-        user.setNickname(nickname!=null?nickname:userName);
-        user.setProfileImgUrl(profileImgUrl);
-        user.setStatusMsg(statusMsg);
+        if (profileImgUrl != null) {
+            user.setProfileImgUrl(profileImgUrl);
+        }
+
+        if (statusMsg != null) {
+            user.setStatusMsg(statusMsg);
+        }
 
         userRepository.save(user);
     }
 
+
+    /**
+     * 유저 정보 등록
+     * @param userId
+     * @param nickname
+     * @param statusMsg
+     * @param profileImgUrl
+     */
     @Transactional
-    public void postUserInfo(Long userId, String nickname, String profileImgUrl, String statusMsg) {
+    public void postUserInfo(Long userId, String nickname, String statusMsg, String profileImgUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new RuntimeException("유저를 찾을 수 없습니다."));
 
@@ -123,8 +133,8 @@ public class UserService {
         return UserInfoResponseDto.builder()
                 .userId(user.getId())
                 .nickname(user.getNickname())
-                .statusMessage(user.getStatusMsg())
-                .profileImageUrl(user.getProfileImgUrl())
+                .statusMsg(user.getStatusMsg())
+                .profileImgUrl(user.getProfileImgUrl())
                 .build();
     }
 
