@@ -1,15 +1,17 @@
 package icet.koco.user.controller;
 
 import icet.koco.global.dto.ApiResponse;
+import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
+import icet.koco.user.dto.UserInfoRequestDto;
 import icet.koco.user.dto.UserInfoResponseDto;
-import icet.koco.user.dto.UserResponse;
 import icet.koco.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -35,21 +37,64 @@ public class UserController {
     }
 
 
+    /**
+     * 유저 정보 등록 API (초기 등록)
+     * @param userInfoRequestDto
+     * @return
+     */
     @Operation(summary = "유저 정보 등록")
     @PostMapping(value = "/me")
-    public ResponseEntity<?> postUserInfo(
-            @RequestParam(value = "nickname", required = false) String nickname,
-            @RequestParam(value = "statusMsg", required = false) String statusMsg,
-            @RequestParam(value = "profileImgUrl", required = false) String profileImgUrl) {
-        System.out.println("nickname: " + nickname);
-        System.out.println("statusMsg: " + statusMsg);
-        System.out.println("profileImgUrl: " + profileImgUrl);
+    public ResponseEntity<?> postUserInfo(@RequestBody UserInfoRequestDto userInfoRequestDto) {
+        try {
+            Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            // DTO 통해서 유저 정보 받아오기
+            String nickname = userInfoRequestDto.getNickname();
+            String statusMsg = userInfoRequestDto.getStatusMsg();
+            String profileImgUrl = userInfoRequestDto.getProfileImgUrl();
 
-        userService.postUserInfo(userId, nickname, profileImgUrl, statusMsg);
+            // 유저 정보 설정
+            userService.postUserInfo(userId, nickname, statusMsg, profileImgUrl);
 
-        return ResponseEntity.ok(UserResponse.ofSuccess());
+            // 204 No content 응답
+            return ResponseEntity.noContent().build();
+
+        } catch (UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail("UNAUTHORIZED", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.fail("INTERNAL_SERVER_ERROR", "알 수 없는 서버 에러"));
+        }
+    }
+
+    /**
+     * 유저 정보 수정 API
+     * @param userInfoRequestDto
+     * @return
+     */
+    @PatchMapping("/me")
+    public ResponseEntity<?> updateUserInfo(@RequestBody UserInfoRequestDto userInfoRequestDto) {
+        try {
+            Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+            String nickname = userInfoRequestDto.getNickname();
+            String statusMsg = userInfoRequestDto.getStatusMsg();
+            String profileImgUrl = userInfoRequestDto.getProfileImgUrl();
+
+            // 유저 정보 설정
+            userService.updateUserInfo(userId, nickname, statusMsg, profileImgUrl);
+
+            // 204 No content 응답
+            return ResponseEntity.noContent().build();
+
+        } catch (UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail("UNAUTHORIZED", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.fail("INTERNAL_SERVER_ERROR", "알 수 없는 서버 에러"));
+        }
     }
 
 

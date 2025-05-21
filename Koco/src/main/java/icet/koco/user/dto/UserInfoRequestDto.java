@@ -5,8 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class UserInfoResponseDto {
-    private Long userId;
+public class UserInfoRequestDto {
     private String nickname;
     private String statusMsg;
     private String profileImgUrl;
