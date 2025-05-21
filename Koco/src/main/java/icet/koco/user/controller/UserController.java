@@ -2,8 +2,8 @@ package icet.koco.user.controller;
 
 import icet.koco.global.dto.ApiResponse;
 import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
+import icet.koco.user.dto.UserInfoRequestDto;
 import icet.koco.user.dto.UserInfoResponseDto;
-import icet.koco.user.dto.UserResponse;
 import icet.koco.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,19 +37,23 @@ public class UserController {
 
     @Operation(summary = "유저 정보 등록")
     @PostMapping(value = "/me")
-    public ResponseEntity<?> postUserInfo(
-            @RequestParam(value = "nickname", required = false) String nickname,
-            @RequestParam(value = "statusMsg", required = false) String statusMsg,
-            @RequestParam(value = "profileImgUrl", required = false) String profileImgUrl) {
-        System.out.println("nickname: " + nickname);
-        System.out.println("statusMsg: " + statusMsg);
-        System.out.println("profileImgUrl: " + profileImgUrl);
-
+    public ResponseEntity<?> postUserInfo(@RequestBody UserInfoRequestDto userInfoRequestDto) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        userService.postUserInfo(userId, nickname, profileImgUrl, statusMsg);
+        // DTO 통해서 유저 정보 받아오기
+        String nickname = userInfoRequestDto.getNickname();
+        String statusMsg = userInfoRequestDto.getStatusMsg();
+        String profileImgUrl = userInfoRequestDto.getProfileImgUrl();
 
-        return ResponseEntity.ok(UserResponse.ofSuccess());
+        // 유저 정보 설정
+        userService.postUserInfo(userId, nickname, statusMsg, profileImgUrl);
+
+        // 성공 응답 반환
+        return ResponseEntity.ok(ApiResponse.success(
+                "USER_INFO_POST_SUCCESS",
+                "유저 정보를 등록하는데 성공했습니다",
+                null
+        ));
     }
 
 
