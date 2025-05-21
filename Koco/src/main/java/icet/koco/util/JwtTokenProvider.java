@@ -16,8 +16,8 @@ public class JwtTokenProvider {
     private String secret;
 
     private SecretKey key;
-//    private final long accessTokenValidity = 1000 * 60 * 30; // 30분
-    private final long accessTokenValidity = 5 * 1000L; // 5초
+    private final long accessTokenValidity = 1000 * 60 * 30; // 30분
+//    private final long accessTokenValidity = 5 * 1000L; // 5초
 
     private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 14; // 14일
 //    private final long refreshTokenValidity = 5 * 1000L;
