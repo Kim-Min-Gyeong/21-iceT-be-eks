@@ -28,61 +28,51 @@ public class AuthService {
     private final RedisTemplate<String, String> redisTemplate;
 
     public AuthResponse loginWithKakao(String code, HttpServletResponse response) {
-        System.out.println(">>> 인가코드 수신: " + code);
-        System.out.println(">>> Kakao Token Response 완료 직전");
-
+        // 인가코드 이용하여 Kakao 정보 받아오기
         KakaoUserResponse kakaoUser = kakaoOAuthClient.getUserInfo(code);
-        System.out.println(">>> Kakao Token Response 완료 후");
 
+        // DB에 유저 이메일이 저장되었는지를 기준으로 신규 / 기존 유저 판별
         Optional<User> userOpt = userRepository.findByEmail(kakaoUser.getEmail());
-        System.out.println(">>> 사용자 카카오 계정 이메일: " + kakaoUser.getEmail());
 
-        System.out.println(">>> 사용자 이름(카카오 닉네임): " + kakaoUser.getName());
-
-
-        System.out.println(">>> 사용자 조회 결과: " + userOpt.isPresent());
-
+        // 기존 사용자
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            System.out.println(">>> 기존 유저: " + user.getId());
 
             // 탈퇴 사용자면 deletedAt만 null로 하고 복구처리
             if (user.getDeletedAt() != null) {
-                System.out.println(">>> 탈퇴 유저 복구");
                 user.setDeletedAt(null);
                 userRepository.save(user);
             }
 
             // RefreshToken Redis에 저장
             String refreshToken = jwtTokenProvider.createRefreshToken(user);
-            System.out.println(
-                ">>>>> (AuthService: loginWithKakao) Refresh token: " + refreshToken);
-
             try {
-                System.out.println(">>> 레디스 저장 시작");
                 redisTemplate.opsForValue().set(user.getId().toString(), refreshToken);
-                System.out.println(">>> 레디스 저장 종료");
             } catch (Exception e) {
-                System.out.println("❗ Redis 저장 실패 (로그인): " + e.getMessage());
+                e.printStackTrace();
             }
 
+            // RefreshToken DB에 업데이트
             oauthRepository.updateRefreshToken(user.getId(), refreshToken);
-            String accessToken = jwtTokenProvider.createAccessToken(user);
-            System.out.println(">>>>> (AuthService: loginWithKakao) Access token: " + accessToken);
 
-            // accessToken 전달
-            Cookie cookie = new Cookie("access_token", accessToken);
-            cookie.setHttpOnly(true);
-            cookie.setMaxAge(30 * 60);
-            cookie.setPath("/");
-            response.addCookie(cookie);
-
+            // RefreshToken 쿠키로 전달
             Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
             refreshCookie.setHttpOnly(true);
             refreshCookie.setMaxAge(7 * 24 * 60 * 60);
             refreshCookie.setPath("/");
             response.addCookie(refreshCookie);
 
+            // accessToken 발급
+            String accessToken = jwtTokenProvider.createAccessToken(user);
+
+            // accessToken 쿠키로 전달
+            Cookie cookie = new Cookie("access_token", accessToken);
+            cookie.setHttpOnly(true);
+            cookie.setMaxAge(30 * 60);
+            cookie.setPath("/");
+            response.addCookie(cookie);
+
+            // 응답 반환
             return AuthResponse.builder()
                 .code("LOGIN_SUCCESS")
                 .message("로그인 성공. 토큰 발급 완료")
