@@ -28,6 +28,11 @@ public class ProblemSetController {
 
     private final ProblemSetService problemSetService;
 
+    /**
+     * 날짜별 문제집 조회
+     * @param date
+     * @return
+     */
     @Operation(summary = "날짜별 문제집 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<ProblemSetResponseDto>> getProblemSetByDate(
@@ -40,6 +45,11 @@ public class ProblemSetController {
         );
     }
 
+    /**
+     * 문제 별 해설 조회
+     * @param problemNumber
+     * @return
+     */
     @Operation(summary = "문제 별 해설 조회")
     @GetMapping("/{problemNumber}/solution")
     public ResponseEntity<?> getProblemSolution(@PathVariable Long problemNumber) {

@@ -42,11 +42,9 @@ public class SurveyService {
     public SurveyResponseDto submitSurvey(Long userId, ProblemSetSurveyRequestDto requestDto) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(() -> new UnauthorizedException("존재하지 않는 사용자입니다."));
-        log.info(">>>>> 사용자 ID: {}", userId);
 
         ProblemSet problemSet = problemSetRepository.findById(requestDto.getProblemSetId())
             .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 문제집입니다."));
-        log.info(">>>>> 문제집 번호: {}", problemSet.getId());
 
         List<Survey> surveysToSave = new ArrayList<>();
 
@@ -59,8 +57,6 @@ public class SurveyService {
             if (!exists) {
                 throw new UnauthorizedException("문제 ID " + problem.getId() + "는 문제집 " + problemSet.getId() + "에 포함되어 있지 않습니다.");
             }
-
-            log.info(">>>>> 문제 번호: {}", problem.getId());
 
             Survey survey = Survey.builder()
                 .user(user)

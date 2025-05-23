@@ -49,11 +49,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (token != null) {
-            System.out.println(">>>>> access_token 추출됨: " + token);
-
             // 토큰 유효성 검사 실패
             if (!jwtTokenProvider.validateToken(token)) {
-                System.out.println(">>>>> 토큰 유효성 검사 실패");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"expired token\"}");
@@ -64,7 +61,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 블랙리스트 검사
             String isBlacklisted = redisTemplate.opsForValue().get("BL:" + token);
             if (isBlacklisted != null) {
-                System.out.println(">>>>> 블랙리스트 토큰");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"BL checked. expired token\"}");
@@ -74,7 +70,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 정상 토큰 → userId 추출 및 인증 객체 생성
             Long userId = jwtTokenProvider.getUserIdFromToken(token);
-            System.out.println(">>>>> userId 추출됨: " + userId);
 
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     userId,
@@ -82,7 +77,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            System.out.println(">>>>> SecurityContext에 인증 정보 저장 완료");
         }
 
         // 다음 필터로 진행

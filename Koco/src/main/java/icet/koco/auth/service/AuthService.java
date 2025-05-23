@@ -2,14 +2,17 @@ package icet.koco.auth.service;
 
 import icet.koco.auth.dto.AuthResponse;
 import icet.koco.auth.dto.KakaoUserResponse;
+import icet.koco.auth.dto.LogoutResponse;
 import icet.koco.auth.dto.RefreshResponse;
 import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
+import icet.koco.util.CookieUtil;
 import icet.koco.util.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -26,7 +29,14 @@ public class AuthService {
     private final OAuthRepository oauthRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
+    private final CookieUtil cookieUtil;
 
+    /**
+     * 카카오 로그인
+     * @param code (인가코드)
+     * @param response
+     * @return
+     */
     public AuthResponse loginWithKakao(String code, HttpServletResponse response) {
         // 인가코드 이용하여 Kakao 정보 받아오기
         KakaoUserResponse kakaoUser = kakaoOAuthClient.getUserInfo(code);
@@ -59,6 +69,7 @@ public class AuthService {
             Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
             refreshCookie.setHttpOnly(true);
             refreshCookie.setMaxAge(7 * 24 * 60 * 60);
+            refreshCookie.setSecure(true);
             refreshCookie.setPath("/");
             response.addCookie(refreshCookie);
 
@@ -66,11 +77,11 @@ public class AuthService {
             String accessToken = jwtTokenProvider.createAccessToken(user);
 
             // accessToken 쿠키로 전달
-            Cookie cookie = new Cookie("access_token", accessToken);
-            cookie.setHttpOnly(true);
-            cookie.setMaxAge(30 * 60);
-            cookie.setPath("/");
-            response.addCookie(cookie);
+            Cookie accessTokenCookie = new Cookie("access_token", accessToken);
+            accessTokenCookie.setHttpOnly(true);
+            accessTokenCookie.setMaxAge(30 * 60);      // 30분
+            accessTokenCookie.setPath("/");
+            response.addCookie(accessTokenCookie);
 
             // 응답 반환
             return AuthResponse.builder()
@@ -84,47 +95,51 @@ public class AuthService {
                 .build();
         }
 
+        // 신규 사용자일 경우
         try {
+            // 사용자 내용 DB에 저장
             User newUser = userRepository.save(User.builder()
                 .email(kakaoUser.getEmail())
                 .name(kakaoUser.getName())
                 .nickname(kakaoUser.getName())
                 .createdAt(LocalDateTime.now())
                 .build());
-            System.out.println(">>> 신규 유저 DB 저장 완료: " + newUser.getId());
 
+            // 리프레시 토큰 발급
             String refreshToken = jwtTokenProvider.createRefreshToken(newUser);
+
+            // 액세스 토큰 발급
             String accessToken = jwtTokenProvider.createAccessToken(newUser);
 
+            // Redis에 리프레시 토큰 저장
             try {
                 redisTemplate.opsForValue().set(newUser.getId().toString(), refreshToken);
-                System.out.println(">>> Redis 저장 완료 (신규)");
             } catch (Exception e) {
-                System.out.println("❗ Redis 저장 실패 (신규가입): " + e.getMessage());
                 e.printStackTrace();
             }
 
+            // oauth DB에 저장
             oauthRepository.save(OAuth.builder()
                 .provider("kakao")
                 .providerId(kakaoUser.getProviderId())
                 .user(newUser)
                 .refreshToken(refreshToken)
                 .build());
-            System.out.println(">>> OAuth 저장 완료");
 
-            Cookie accessCookie = new Cookie("access_token", accessToken);
-            accessCookie.setHttpOnly(true);
-            accessCookie.setMaxAge(30 * 60);
-            accessCookie.setPath("/");
-            response.addCookie(accessCookie);
-
+            // RefreshToken 쿠키로 전달
             Cookie refreshCookie = new Cookie("refresh_token", refreshToken);
             refreshCookie.setHttpOnly(true);
             refreshCookie.setMaxAge(7 * 24 * 60 * 60);
+            refreshCookie.setSecure(true);
             refreshCookie.setPath("/");
             response.addCookie(refreshCookie);
 
-            System.out.println(">>> 쿠키 설정 완료");
+            // accessToken 쿠키로 전달
+            Cookie accessTokenCookie = new Cookie("access_token", accessToken);
+            accessTokenCookie.setHttpOnly(true);
+            accessTokenCookie.setMaxAge(30 * 60);      // 30분
+            accessTokenCookie.setPath("/");
+            response.addCookie(accessTokenCookie);
 
             return AuthResponse.builder()
                 .code("LOGIN_SUCCESS")
@@ -136,13 +151,19 @@ public class AuthService {
                     .build())
                 .build();
         } catch (Exception e) {
-            System.out.println("❗❗ 신규 가입 처리 중 예외 발생: " + e.getMessage());
+            System.out.println(" >>> 신규 가입 처리 중 예외 발생: " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("회원 가입 중 에러 발생");
         }
     }
 
-        public RefreshResponse refreshAccessToken(String refreshToken, HttpServletResponse response) {
+    /**
+     * 리프레시 토큰 갱신
+     * @param refreshToken
+     * @param response
+     * @return
+     */
+    public RefreshResponse refreshAccessToken(String refreshToken, HttpServletResponse response) {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new UnauthorizedException("유효하지 않은 리프레시 토큰입니다.");
         }
@@ -154,7 +175,7 @@ public class AuthService {
         try {
             redisToken = redisTemplate.opsForValue().get(userId.toString());
         } catch (Exception e) {
-            System.out.println("❗ Redis 조회 실패 (refresh): " + e.getMessage());
+            System.out.println("Redis 조회 실패 (refresh): " + e.getMessage());
         }
 
         if (redisToken == null || !redisToken.equals(refreshToken)) {
@@ -169,17 +190,15 @@ public class AuthService {
         String newAccessToken = jwtTokenProvider.createAccessToken(user);
         String newRefreshToken = jwtTokenProvider.createRefreshToken(user);
 
-        System.out.println(">>>>> (AuthService: refreshAccessToken) Access token: " + newAccessToken);
-        System.out.println(">>>>> (AuthService: refreshAccessToken) Refresh token: " + newRefreshToken);
-
         try {
             redisTemplate.opsForValue().set(user.getId().toString(), newRefreshToken);
         } catch (Exception e) {
-            System.out.println("❗ Redis 저장 실패 (refresh): " + e.getMessage());
+            System.out.println("Redis 저장 실패 (refresh): " + e.getMessage());
         }
 
         oauthRepository.updateRefreshToken(user.getId(), newRefreshToken);
 
+        // accessToken 쿠키로 전달
         Cookie accessCookie = new Cookie("access_token", newAccessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setSecure(true);
@@ -187,6 +206,7 @@ public class AuthService {
         accessCookie.setMaxAge(30 * 60);
         response.addCookie(accessCookie);
 
+        // RefreshToken 쿠키로 전달
         Cookie refreshCookie = new Cookie("refresh_token", newRefreshToken);
         refreshCookie.setHttpOnly(true);
         refreshCookie.setSecure(true);
@@ -194,10 +214,63 @@ public class AuthService {
         refreshCookie.setMaxAge(7 * 24 * 60 * 60);
         response.addCookie(refreshCookie);
 
+        // 응답 반환
         return RefreshResponse.builder()
             .code("TOKEN_REFRESH_SUCCESS")
             .message("토큰이 성공적으로 재발급되었습니다.")
             .build();
+    }
+
+
+    public LogoutResponse logout(HttpServletRequest request, HttpServletResponse response) {
+        // 쿠키에서 accessToken 추출
+        String accessToken = extractTokenFromCookies(request);
+        System.out.println(">>>>> (LogoutService) accessToken: " + accessToken);
+
+        // 유효성 검사
+        if (accessToken == null || !jwtTokenProvider.validateToken(accessToken)) {
+            if (accessToken == null) {
+                System.out.println(">>>>> (LogoutServie) Invalid access token");
+            }
+            throw new UnauthorizedException("유효하지 않은 토큰입니다.");
+        }
+
+        // 3. 토큰에서 userId 추출
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+        System.out.println("userId = " + userId);
+
+        // 4. DB에서 RefreshToken null로 만들기
+        oauthRepository.findByUserId(userId).ifPresent(oAuth -> {
+            oAuth.setRefreshToken(null);
+            oauthRepository.save(oAuth);
+        });
+
+        // 5. Redis에서도 삭제
+        redisTemplate.delete(userId.toString());
+
+        long expiration = jwtTokenProvider.getExpiration(accessToken);
+        redisTemplate.opsForValue().set("BL:" + accessToken, "logout", expiration, java.util.concurrent.TimeUnit.MILLISECONDS);
+
+        // 6. 쿠키 제거
+        cookieUtil.invalidateCookie(response, "access_token");
+        cookieUtil.invalidateCookie(response, "refresh_token");
+
+        // 7. 응답 반환
+        return LogoutResponse.builder()
+                .code("LOGOUT_SUCCESS")
+                .message("로그아웃 성공.")
+                .redirectUrl("/api/v1/auth/login/") // To-Do: 프론트 도메인 나중에 연결
+                .build();
+    }
+
+    private String extractTokenFromCookies(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        for (Cookie cookie : request.getCookies()) {
+            if ("access_token".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }
 

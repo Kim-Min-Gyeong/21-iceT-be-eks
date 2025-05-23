@@ -23,6 +23,11 @@ public class SurveyController {
 
     private final SurveyService surveyService;
 
+    /**
+     * 유저 설문 응답 저장 API
+     * @param requestDto
+     * @return
+     */
     @Operation(summary = "설문 응답 저장")
     @PostMapping
     public ResponseEntity<ApiResponse<SurveyResponseDto>> submitSurvey(

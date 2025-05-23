@@ -32,30 +32,6 @@ public class UserAlgorithmStatsService {
     private final SurveyRepository surveyRepository;
     private final ProblemCategoryRepository problemCategoryRepository;
 
-
-    @Transactional
-    public void upsertCorrectRate(Long userId, Long categoryId, Double correctRate) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
-
-        Category category = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
-
-        Optional<UserAlgorithmStats> existing = statsRepository.findByUserAndCategory(user, category);
-
-        if (existing.isPresent()) {
-            UserAlgorithmStats stats = existing.get();
-            stats.setCorrectRate(correctRate.intValue());
-        } else {
-            UserAlgorithmStats newStats = UserAlgorithmStats.builder()
-                .user(user)
-                .category(category)
-                .correctRate(correctRate.intValue())
-                .build();
-            statsRepository.save(newStats);
-        }
-    }
-
     // updateStatsFromSurveys - 비선형 정규화 (x^0.6 방식) 적용
     @Transactional
     public void updateStatsFromSurveys(Long userId) {
