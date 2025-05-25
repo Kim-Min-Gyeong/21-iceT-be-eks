@@ -30,7 +30,6 @@ public class AuthController {
     @Operation(summary = "카카오 콜백")
     public ResponseEntity<AuthResponse> kakaoCallback(@RequestParam("code") String code,
                                                       HttpServletResponse response) {
-        System.out.println("인가코드: " + code);
         AuthResponse authResponse = authService.loginWithKakao(code, response);
         return ResponseEntity.ok(authResponse);
     }

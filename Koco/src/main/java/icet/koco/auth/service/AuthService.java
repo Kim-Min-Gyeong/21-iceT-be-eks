@@ -17,9 +17,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -151,7 +153,7 @@ public class AuthService {
                     .build())
                 .build();
         } catch (Exception e) {
-            System.out.println(" >>> 신규 가입 처리 중 예외 발생: " + e.getMessage());
+            log.error("신규 가입 처리 중 예외 발생: {}", e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("회원 가입 중 에러 발생");
         }
@@ -164,7 +166,7 @@ public class AuthService {
      * @return
      */
     public RefreshResponse refreshAccessToken(String refreshToken, HttpServletResponse response) {
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.isInvalidToken(refreshToken)) {
             throw new UnauthorizedException("유효하지 않은 리프레시 토큰입니다.");
         }
 
@@ -175,7 +177,7 @@ public class AuthService {
         try {
             redisToken = redisTemplate.opsForValue().get(userId.toString());
         } catch (Exception e) {
-            System.out.println("Redis 조회 실패 (refresh): " + e.getMessage());
+            log.info("Redis 조회 실패 (refresh): {} ", e.getMessage());
         }
 
         if (redisToken == null || !redisToken.equals(refreshToken)) {
@@ -193,7 +195,7 @@ public class AuthService {
         try {
             redisTemplate.opsForValue().set(user.getId().toString(), newRefreshToken);
         } catch (Exception e) {
-            System.out.println("Redis 저장 실패 (refresh): " + e.getMessage());
+            log.info("Redis 저장 실패 (refresh): {} ", e.getMessage());
         }
 
         oauthRepository.updateRefreshToken(user.getId(), newRefreshToken);
@@ -225,19 +227,17 @@ public class AuthService {
     public LogoutResponse logout(HttpServletRequest request, HttpServletResponse response) {
         // 쿠키에서 accessToken 추출
         String accessToken = extractTokenFromCookies(request);
-        System.out.println(">>>>> (LogoutService) accessToken: " + accessToken);
 
         // 유효성 검사
-        if (accessToken == null || !jwtTokenProvider.validateToken(accessToken)) {
+        if (accessToken == null || !jwtTokenProvider.isInvalidToken(accessToken)) {
             if (accessToken == null) {
-                System.out.println(">>>>> (LogoutServie) Invalid access token");
+                log.info(">>>>> (LogoutServie) Invalid access token");
             }
             throw new UnauthorizedException("유효하지 않은 토큰입니다.");
         }
 
         // 3. 토큰에서 userId 추출
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
-        System.out.println("userId = " + userId);
 
         // 4. DB에서 RefreshToken null로 만들기
         oauthRepository.findByUserId(userId).ifPresent(oAuth -> {

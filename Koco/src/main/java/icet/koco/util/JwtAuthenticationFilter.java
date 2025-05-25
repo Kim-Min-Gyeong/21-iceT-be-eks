@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             // 토큰 유효성 검사 실패
-            if (!jwtTokenProvider.validateToken(token)) {
+            if (!jwtTokenProvider.isInvalidToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"expired token\"}");

@@ -19,10 +19,6 @@ public class JwtTokenProvider {
     private String secret;
 
     private SecretKey key;
-    private final long accessTokenValidity = 1000 * 60 * 30; // 30분
-
-
-    private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 14; // 14일
 
     @PostConstruct
     public void init() {
@@ -35,6 +31,7 @@ public class JwtTokenProvider {
      * @return
      */
     public String createAccessToken(User user) {
+        long accessTokenValidity = 1000 * 60 * 30; // 30분
         return Jwts.builder()
             .setSubject(user.getId().toString())
             .claim("email", user.getEmail())
@@ -50,6 +47,7 @@ public class JwtTokenProvider {
      * @return
      */
     public String createRefreshToken(User user) {
+        long refreshTokenValidity = 1000L * 60 * 60 * 24 * 14; // 14일
         return Jwts.builder()
             .setSubject(user.getId().toString())
             .setIssuedAt(new Date())
@@ -65,16 +63,14 @@ public class JwtTokenProvider {
      * @return
      */
 
-    public boolean validateToken(String token) {
+    public boolean isInvalidToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (ExpiredJwtException e) {
-            log.error("Exception [Err_Msg]: {}", e.getMessage());
-        } catch (MalformedJwtException e) {
-            log.error("Exception [Err_Msg]: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.error("JWT Exception [Err_Msg]: {}", e.getMessage());
         } catch (Exception e) {
-            System.out.println("기타 오류: " + e.getMessage());
+            log.error("Other Exception [Err_Msg]: {}", e.getMessage());
         }
         return false;
     }
