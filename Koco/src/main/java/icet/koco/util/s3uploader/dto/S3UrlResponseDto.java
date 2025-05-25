@@ -1,4 +1,4 @@
-package icet.koco.util.uploader.dto;
+package icet.koco.util.s3uploader.dto;
 
 import lombok.Builder;
 import lombok.Getter;

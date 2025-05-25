@@ -18,7 +18,6 @@ public class AuthResponse {
     @NoArgsConstructor
     public static class AuthData {
         private String email;
-//        private String nickname;
         private String name;
 
         @JsonProperty("isRegistered")

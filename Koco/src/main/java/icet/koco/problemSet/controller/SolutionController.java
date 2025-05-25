@@ -21,10 +21,15 @@ public class SolutionController {
 
     private final SolutionService solutionService;
 
+    /**
+     * 해설 저장 API (AI -> 백)
+     * @param aiSolutionRequestDto
+     * @return
+     */
     @Operation(summary = "AI서버로부터 해설 저장")
     @PostMapping
-    public ResponseEntity<?> receiveSolution(@RequestBody AiSolutionRequestDto dto) {
-        solutionService.saveFromAi(dto);
+    public ResponseEntity<?> receiveSolution(@RequestBody AiSolutionRequestDto aiSolutionRequestDto) {
+        solutionService.saveFromAi(aiSolutionRequestDto);
         return ResponseEntity.ok(ApiResponse.success("SOLUTION_RECEIVED", "해설 저장 완료", null));
     }
 }

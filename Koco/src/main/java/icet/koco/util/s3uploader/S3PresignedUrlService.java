@@ -1,4 +1,4 @@
-package icet.koco.util.uploader;
+package icet.koco.util.s3uploader;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
@@ -23,10 +23,10 @@ public class S3PresignedUrlService {
 
 
     public String generatePresignedUrl(String uuidFilName) {
-        String key = "profile/" + uuidFilName;                         // profile 객체에 저장
+        String key = "profile/" + uuidFilName;                              // s3의 profile 객체에 저장
 
         Date expiration = new Date();
-        expiration.setTime(expiration.getTime() + 1000 * 60 * 3);   // 유효시간: 3분
+        expiration.setTime(expiration.getTime() + 1000 * 60 * 3);           // presignedURl 유효시간: 3분
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest =
                 new GeneratePresignedUrlRequest(bucket, key)
@@ -37,6 +37,7 @@ public class S3PresignedUrlService {
         return url.toString();
     }
 
+    // fileUrl 생성
     public String getFileUrl(String fileName) {
         String key = "profile/" + fileName;
         return amazonS3.getUrl(bucket, key).toString();

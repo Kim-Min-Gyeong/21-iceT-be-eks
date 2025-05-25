@@ -1,7 +1,7 @@
-package icet.koco.util.uploader;
+package icet.koco.util.s3uploader;
 
 import icet.koco.global.dto.ApiResponse;
-import icet.koco.util.uploader.dto.S3UrlResponseDto;
+import icet.koco.util.s3uploader.dto.S3UrlResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +23,11 @@ public class S3UploadController {
 
     private final S3PresignedUrlService s3Service;
 
+    /**
+     * PresignedUrl 조회 API
+     * @param fileName
+     * @return
+     */
     @Operation(summary = "presigned-url 제공")
     @GetMapping("/presigned-url")
     public ResponseEntity<?> getPresignedUrl(@RequestParam String fileName) {
