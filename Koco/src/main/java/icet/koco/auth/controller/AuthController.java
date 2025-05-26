@@ -2,6 +2,7 @@ package icet.koco.auth.controller;
 
 import icet.koco.auth.dto.*;
 import icet.koco.auth.service.AuthService;
+import icet.koco.global.dto.ApiResponse;
 import icet.koco.global.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,14 +55,15 @@ public class AuthController {
      */
     @Operation(summary = "리프레쉬 토큰 기반 재발급")
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshResponse> refreshToken(
+    public ResponseEntity<?> refreshToken(
             @CookieValue(value = "refresh_token") String refreshToken,
             HttpServletResponse response) {
         try {
             RefreshResponse refreshResponse = authService.refreshAccessToken(refreshToken, response);
-            return ResponseEntity.ok(refreshResponse);
+            return ResponseEntity.ok(ApiResponse.success("TOKEN_REFRESH_SUCCESS", "토큰 재발급에 성공하였습니다.", refreshResponse));
         } catch (UnauthorizedException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail("UNAUTHORIZED_ERROR", "리프레시 토큰이 유효하지 않습니다."));
         }
     }
 }
