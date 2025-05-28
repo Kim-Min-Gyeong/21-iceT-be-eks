@@ -74,7 +74,7 @@ jobs:
         run: |
           set -e  # 에러 발생 시 즉시 실패
           mkdir codedeploy
-          cp appspec.yml docker-compose.yml codedeploy/
+          cp appspec.yaml docker-compose.yaml codedeploy/
           cp -r scripts codedeploy/
           cd codedeploy
           zip -r ../$DEPLOY_ZIP_KEY .
