@@ -58,6 +58,7 @@ public class AuthService {
 
             // RefreshToken Redis에 저장
             String refreshToken = jwtTokenProvider.createRefreshToken(user);
+            System.out.println("refreshToken: " + refreshToken);
             try {
                 redisTemplate.opsForValue().set(user.getId().toString(), refreshToken);
             } catch (Exception e) {
@@ -77,6 +78,7 @@ public class AuthService {
 
             // accessToken 발급
             String accessToken = jwtTokenProvider.createAccessToken(user);
+            System.out.println("accessToken: " + accessToken);
 
             // accessToken 쿠키로 전달
             Cookie accessTokenCookie = new Cookie("access_token", accessToken);

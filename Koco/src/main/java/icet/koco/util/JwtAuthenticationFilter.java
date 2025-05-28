@@ -39,7 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
 
         String token = null;
-        if (request.getCookies() != null) {
+//        // 1️⃣ Authorization 헤더 우선
+//        String bearer = request.getHeader("Authorization");
+//        if (bearer != null && bearer.startsWith("Bearer ")) {
+//            token = bearer.substring(7);
+//        }
+//
+//        // 2️⃣ Authorization 헤더 없으면 쿠키에서 찾기
+        if (token == null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("access_token".equals(cookie.getName())) {
                     token = cookie.getValue();
