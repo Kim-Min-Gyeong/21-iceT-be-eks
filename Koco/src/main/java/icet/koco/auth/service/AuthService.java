@@ -162,70 +162,11 @@ public class AuthService {
     }
 
     /**
-     * 리프레시 토큰 갱신
-     * @param refreshToken
+     * 로그아웃
+     * @param request
      * @param response
      * @return
      */
-    public RefreshResponse refreshAccessToken(String refreshToken, HttpServletResponse response) {
-        if (!jwtTokenProvider.isInvalidToken(refreshToken)) {
-            throw new UnauthorizedException("유효하지 않은 리프레시 토큰입니다.");
-        }
-
-        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
-        Optional<OAuth> oauthOpt = oauthRepository.findByUserId(userId);
-
-        String redisToken = null;
-        try {
-            redisToken = redisTemplate.opsForValue().get(userId.toString());
-        } catch (Exception e) {
-            log.info("Redis 조회 실패 (refresh): {} ", e.getMessage());
-        }
-
-        if (redisToken == null || !redisToken.equals(refreshToken)) {
-            throw new UnauthorizedException("Redis에 저장된 토큰이 일치하지 않습니다.");
-        }
-
-        if (oauthOpt.isEmpty() || !refreshToken.equals(oauthOpt.get().getRefreshToken())) {
-            throw new UnauthorizedException("DB에 저장된 토큰이 일치하지 않습니다.");
-        }
-
-        User user = oauthOpt.get().getUser();
-        String newAccessToken = jwtTokenProvider.createAccessToken(user);
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(user);
-
-        try {
-            redisTemplate.opsForValue().set(user.getId().toString(), newRefreshToken);
-        } catch (Exception e) {
-            log.info("Redis 저장 실패 (refresh): {} ", e.getMessage());
-        }
-
-        oauthRepository.updateRefreshToken(user.getId(), newRefreshToken);
-
-        // accessToken 쿠키로 전달
-        Cookie accessCookie = new Cookie("access_token", newAccessToken);
-        accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(30 * 60);
-        response.addCookie(accessCookie);
-
-        // RefreshToken 쿠키로 전달
-        Cookie refreshCookie = new Cookie("refresh_token", newRefreshToken);
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(refreshCookie);
-
-        // 응답 반환
-        return RefreshResponse.builder()
-            .code("TOKEN_REFRESH_SUCCESS")
-            .message("토큰이 성공적으로 재발급되었습니다.")
-            .build();
-    }
-
-
     public LogoutResponse logout(HttpServletRequest request, HttpServletResponse response) {
         // 쿠키에서 accessToken 추출
         String accessToken = extractTokenFromCookies(request);
@@ -235,11 +176,17 @@ public class AuthService {
             if (accessToken == null) {
                 log.info(">>>>> (LogoutServie) Invalid access token");
             }
-            throw new UnauthorizedException("유효하지 않은 토큰입니다.");
+            throw new UnauthorizedException("유효하지 않은 access 토큰입니다.");
         }
 
+        Long userId;
         // 3. 토큰에서 userId 추출
-        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+        try {
+            userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+        } catch (Exception e) {
+            throw new UnauthorizedException("토큰에서 사용자 ID를 추출할 수 없습니다.");
+        }
+
 
         // 4. DB에서 RefreshToken null로 만들기
         oauthRepository.findByUserId(userId).ifPresent(oAuth -> {
@@ -265,6 +212,69 @@ public class AuthService {
                 .build();
     }
 
+    /**
+     * 리프레시 토큰 갱신
+     * @param refreshToken
+     * @param response
+     * @return
+     */
+    public RefreshResponse refreshAccessToken(String refreshToken, HttpServletResponse response) {
+        if (!jwtTokenProvider.isInvalidToken(refreshToken)) {
+            throw new UnauthorizedException("유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        Optional<OAuth> oauthOpt = Optional.ofNullable(oauthRepository.findByUserId(userId)
+                .orElseThrow(() -> new UnauthorizedException("OAuth 정보가 존재하지 않습니다.")));
+
+        String redisToken = redisTemplate.opsForValue().get(userId.toString());
+
+        if (redisToken == null || !redisToken.equals(refreshToken)) {
+            throw new UnauthorizedException("Redis에 저장된 토큰이 일치하지 않습니다.");
+        }
+
+        if (oauthOpt.isEmpty() || !refreshToken.equals(oauthOpt.get().getRefreshToken())) {
+            throw new UnauthorizedException("DB에 저장된 토큰이 일치하지 않습니다.");
+        }
+
+        User user = oauthOpt.get().getUser();
+        String newAccessToken = jwtTokenProvider.createAccessToken(user);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user);
+
+        // redis에 새 refreshToken 저장
+        redisTemplate.opsForValue().set(user.getId().toString(), newRefreshToken);
+
+        // DB에 새 refreshToken 저장
+        oauthRepository.updateRefreshToken(user.getId(), newRefreshToken);
+
+        // accessToken 쿠키로 전달
+        Cookie accessCookie = new Cookie("access_token", newAccessToken);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(30 * 60);
+        response.addCookie(accessCookie);
+
+        // RefreshToken 쿠키로 전달
+        Cookie refreshCookie = new Cookie("refresh_token", newRefreshToken);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(7 * 24 * 60 * 60);
+        response.addCookie(refreshCookie);
+
+        // 응답 반환
+        return RefreshResponse.builder()
+            .code("TOKEN_REFRESH_SUCCESS")
+            .message("토큰이 성공적으로 재발급되었습니다.")
+            .build();
+    }
+
+    /**
+     * 쿠키에서 토큰 추출
+     * @param request
+     * @return
+     */
     private String extractTokenFromCookies(HttpServletRequest request) {
         if (request.getCookies() == null) return null;
         for (Cookie cookie : request.getCookies()) {
