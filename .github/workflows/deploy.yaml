@@ -71,11 +71,13 @@ jobs:
 
       # ✅ CodeDeploy 배포 zip 패키징
       - name: Package for CodeDeploy
-        run: 
+        run: |
+          set -e  # 에러 발생 시 즉시 실패
           mkdir codedeploy
-          cp appspec.yml docker-compose.yml scouter-agent.conf -t codedeploy/
+          cp appspec.yml docker-compose.yml codedeploy/
           cp -r scripts codedeploy/
-          cd codedeploy && zip -r ../$DEPLOY_ZIP_KEY .
+          cd codedeploy
+          zip -r ../$DEPLOY_ZIP_KEY .
 
       # ✅ S3에 업로드 (dev 수동 + main 자동 공통)
       - name: Upload to S3
