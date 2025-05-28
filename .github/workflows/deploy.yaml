@@ -1,0 +1,98 @@
+name: Deploy Spring Boot App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'ECR 이미지 태그 (예: v1.0.0)'
+        required: true
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPO: ${{ secrets.ECR_REPO }}
+  ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME }}
+  IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+  S3_BUCKET: koco-codedeploy-artifacts
+  DEPLOY_ZIP_KEY: spring-app-deploy.zip
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # ✅ ECR 태그 중복 확인 (dev 브랜치 수동 실행 시에만)
+      - name: Check if tag already exists in ECR
+        if: github.ref == 'refs/heads/dev' && github.event_name == 'workflow_dispatch'
+        run: |
+          echo "🔍 Checking if tag '$IMAGE_TAG' exists in ECR..."
+          RESULT=$(aws ecr describe-images \
+            --repository-name $ECR_REPO_NAME \
+            --image-ids imageTag=$IMAGE_TAG \
+            --region $AWS_REGION 2>/dev/null || true)
+          if echo "$RESULT" | grep -q imageDigest; then
+            echo "❌ ERROR: Tag '$IMAGE_TAG' already exists in ECR."
+            exit 1
+          fi
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # ✅ ECR 로그인 및 이미지 빌드+푸시 (dev 수동 실행일 때만)
+      - name: Build and Push Docker image to ECR (with latest tag)
+        if: github.ref == 'refs/heads/dev' && github.event_name == 'workflow_dispatch'
+        run: |
+          echo "🔐 Logging in to Amazon ECR..."
+          aws ecr get-login-password --region $AWS_REGION \
+            | docker login --username AWS --password-stdin $ECR_REPO
+
+          echo "🔧 Building Docker image..."
+          docker build -t my-spring-app .
+
+          echo "🏷 Tagging image with version: $IMAGE_TAG"
+          docker tag my-spring-app:latest $ECR_REPO:$IMAGE_TAG
+
+          echo "🏷 Tagging image as latest"
+          docker tag my-spring-app:latest $ECR_REPO:latest
+
+          echo "📤 Pushing image with tag: $IMAGE_TAG"
+          docker push $ECR_REPO:$IMAGE_TAG
+
+          echo "📤 Pushing image with tag: latest"
+          docker push $ECR_REPO:latest
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+
+      # ✅ CodeDeploy 배포 zip 패키징
+      - name: Package for CodeDeploy
+        run: 
+          mkdir codedeploy
+          cp appspec.yml docker-compose.yml -t codedeploy/
+          cp -r scripts codedeploy/
+          cd codedeploy && zip -r ../$DEPLOY_ZIP_KEY .
+
+      # ✅ S3에 업로드 (dev 수동 + main 자동 공통)
+      - name: Upload to S3
+        run: |
+          aws s3 cp $DEPLOY_ZIP_KEY s3://$S3_BUCKET/$DEPLOY_ZIP_KEY
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # ✅ CodeDeploy 트리거 (dev 수동 + main 자동 공통)
+      - name: Trigger CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name was-deploy-app \
+            --deployment-group-name was-deploy-group \
+            --s3-location bucket=$S3_BUCKET,key=$DEPLOY_ZIP_KEY,bundleType=zip \
+            --deployment-config-name CodeDeployDefault.AllAtOnce
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
