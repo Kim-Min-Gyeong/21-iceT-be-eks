@@ -1,5 +1,5 @@
 # 1️⃣ 빌드 스테이지: Microsoft OpenJDK 21 (Ubuntu 기반)
-FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu AS builder
+FROM FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu AS builder
 
 WORKDIR /build
 
@@ -10,7 +10,7 @@ COPY Koco/ .
 RUN ./gradlew clean build -x test
 
 # 2️⃣ 런타임 스테이지: Microsoft OpenJDK 21 JRE (Ubuntu 기반)
-FROM mcr.microsoft.com/openjdk/runtime:21-ubuntu
+FROM FROM mcr.microsoft.com/openjdk/jre:21-ubuntu
 
 # ▶️ Scouter Agent 설정
 ENV SCOUTER_VERSION=2.20.0
