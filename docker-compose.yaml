@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  spring:
+    image: 266735804784.dkr.ecr.ap-northeast-2.amazonaws.com/app-repo/my-spring-app:latest
+    ports:
+      - "8080:8080"
+      - "6100:6100"
+      - "9100:9100"  
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    volumes:
+      - /home/ec2-user/logs:/app/logs   # ✅ 호스트 → 컨테이너 로그 마운트
+
+  redis:
+    image: redis:7.2
+    ports:
+      - "6379:6379"
