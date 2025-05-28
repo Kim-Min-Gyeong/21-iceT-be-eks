@@ -12,18 +12,23 @@ RUN ./gradlew clean build -x test
 # 2️⃣ 런타임 스테이지: Microsoft OpenJDK 21 JRE (Ubuntu 기반)
 FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu
 
-# ▶️ Scouter Agent 설정
+# 1. 필수 패키지 설치
+RUN apt-get update && \
+    apt-get install -y wget unzip
+
+# 2. Scouter 다운로드
 ARG SCOUTER_VERSION=2.15
 ENV SCOUTER_VERSION=${SCOUTER_VERSION}
 
-# Scouter Java Agent 다운로드 및 설치
-RUN apt update && \
-    apt install -y wget unzip && \
-    cd /opt && \
-    wget https://github.com/scouter-project/scouter/releases/download/v${SCOUTER_VERSION}/scouter-all-${SCOUTER_VERSION}.zip && \
+RUN cd /opt && \
+    wget --timeout=30 --tries=3 https://github.com/scouter-project/scouter/releases/download/v${SCOUTER_VERSION}/scouter-all-${SCOUTER_VERSION}.zip
+
+# 3. 압축 해제 및 이동
+RUN cd /opt && \
     unzip scouter-all-${SCOUTER_VERSION}.zip && \
     mv scouter-all-${SCOUTER_VERSION}/scouter /opt/scouter && \
     rm -rf scouter-all-${SCOUTER_VERSION}*
+
 
 # Scouter Java Agent 설정 파일 복사
 COPY scouter-agent.conf /opt/scouter/agent.java/conf/scouter.conf
