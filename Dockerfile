@@ -1,5 +1,5 @@
 # 1️⃣ 빌드 스테이지: Microsoft OpenJDK 21 (Ubuntu 기반)
-FROM FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu AS builder
+FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu AS builder
 
 WORKDIR /build
 
