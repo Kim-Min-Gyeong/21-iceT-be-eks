@@ -1,5 +1,6 @@
 package icet.koco.util.s3uploader;
 
+import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
 import icet.koco.util.s3uploader.dto.S3UrlResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,7 +43,7 @@ public class S3UploadController {
                 .build();
 
         return ResponseEntity.ok(
-                ApiResponse.success("S3_PRESIGNED_URL_SUCCESS", "AWS_S3 presigned url 조회 성공", responseDto)
+                ApiResponse.success(ApiResponseCode.SUCCESS,"AWS_S3 presigned url 조회 성공", responseDto)
         );
     }
 

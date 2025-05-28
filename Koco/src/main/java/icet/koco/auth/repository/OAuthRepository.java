@@ -19,4 +19,6 @@ public interface OAuthRepository extends JpaRepository<OAuth, Long> {
     @Query("UPDATE OAuth o SET o.refreshToken = :refreshToken WHERE o.user.id = :userId")
     void updateRefreshToken(Long userId, String refreshToken);
 
+    Optional<OAuth> findByUserAndDeletedAtIsNull(Long userId);
+
 }

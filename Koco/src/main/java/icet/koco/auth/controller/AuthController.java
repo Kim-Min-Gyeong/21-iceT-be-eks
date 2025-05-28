@@ -2,6 +2,7 @@ package icet.koco.auth.controller;
 
 import icet.koco.auth.dto.*;
 import icet.koco.auth.service.AuthService;
+import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
 import icet.koco.global.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,10 +30,10 @@ public class AuthController {
      */
     @GetMapping("/callback")
     @Operation(summary = "카카오 콜백")
-    public ResponseEntity<AuthResponse> kakaoCallback(@RequestParam("code") String code,
+    public ResponseEntity<?> kakaoCallback(@RequestParam("code") String code,
                                                       HttpServletResponse response) {
         AuthResponse authResponse = authService.loginWithKakao(code, response);
-        return ResponseEntity.ok(authResponse);
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.SUCCESS, "카카오 콜백에 성공하였습니다.", authResponse));
     }
 
     /**
@@ -43,8 +44,9 @@ public class AuthController {
      */
     @Operation(summary = "로그아웃")
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponse> logout(HttpServletRequest request, HttpServletResponse response) {
-        return ResponseEntity.ok(authService.logout(request, response));
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        authService.logout(request, response);
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.SUCCESS, "로그아웃에 성공하였습니다.",null));
     }
 
     /**
@@ -57,13 +59,9 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(
             @CookieValue(value = "refresh_token") String refreshToken,
-            HttpServletResponse response) {
-        try {
-            RefreshResponse refreshResponse = authService.refreshAccessToken(refreshToken, response);
-            return ResponseEntity.ok(ApiResponse.success("TOKEN_REFRESH_SUCCESS", "토큰 재발급에 성공하였습니다.", refreshResponse));
-        } catch (UnauthorizedException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.fail("UNAUTHORIZED_ERROR", "리프레시 토큰이 유효하지 않습니다."));
-        }
+            HttpServletResponse response)
+    {
+        RefreshResponse refreshResponse = authService.refreshAccessToken(refreshToken, response);
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.SUCCESS, "토큰 재발급에 성공하였습니다.", refreshResponse));
     }
 }
