@@ -24,8 +24,8 @@ RUN apt-get update && \
     cd /opt && \
     wget https://github.com/scouter-project/scouter/releases/download/v${SCOUTER_VERSION}/scouter-all-${SCOUTER_VERSION}.tar.gz && \
     tar -xzf scouter-all-${SCOUTER_VERSION}.tar.gz && \
-    mv scouter-all-${SCOUTER_VERSION}/scouter /opt/scouter && \
-    rm -rf scouter-all-${SCOUTER_VERSION}*
+    mv scouter /opt/scouter && \
+    rm -rf scouter
 
 # Scouter Java Agent 설정 파일 복사
 COPY scouter-agent.conf /opt/scouter/agent.java/conf/scouter.conf
