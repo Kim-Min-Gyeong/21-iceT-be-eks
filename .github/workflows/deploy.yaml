@@ -73,7 +73,7 @@ jobs:
       - name: Package for CodeDeploy
         run: 
           mkdir codedeploy
-          cp appspec.yml docker-compose.yml -t codedeploy/
+          cp appspec.yml docker-compose.yml scouter-agent.conf -t codedeploy/
           cp -r scripts codedeploy/
           cd codedeploy && zip -r ../$DEPLOY_ZIP_KEY .
 
