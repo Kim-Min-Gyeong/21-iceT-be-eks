@@ -13,7 +13,8 @@ RUN ./gradlew clean build -x test
 FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu
 
 # ▶️ Scouter Agent 설정
-ENV SCOUTER_VERSION=2.20.0
+ARG SCOUTER_VERSION=2.20
+ENV SCOUTER_VERSION=${SCOUTER_VERSION}
 
 # Scouter Java Agent 다운로드 및 설치
 RUN apt update && \
