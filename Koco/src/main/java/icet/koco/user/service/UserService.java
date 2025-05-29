@@ -50,7 +50,7 @@ public class UserService {
             .orElseThrow(() -> new ResourceNotFoundException("해당 유저 정보를 찾을 수 없습니다."));
 
         // 2. OAuth 정보 조회
-        OAuth oauth = oAuthRepository.findByUserAndDeletedAtIsNull(userId)
+        OAuth oauth = oAuthRepository.findByUserId(userId)
             .orElseThrow(() -> new UnauthorizedException("OAuth 정보가 존재하지 않습니다."));
 
         // 3. Kakao unlink 호출
