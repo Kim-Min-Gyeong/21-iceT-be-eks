@@ -33,7 +33,7 @@ public class Problem {
 
     // 문제 설명
     @Lob
-    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "description", nullable = false, columnDefinition = "LONGTEXT")
     private String description;
 
     // 입력 설명
