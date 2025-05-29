@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class SurveyService {
 
     private final UserAlgorithmStatsService userAlgorithmStatsService;
-
     private final UserRepository userRepository;
     private final ProblemSetRepository problemSetRepository;
     private final ProblemRepository problemRepository;
