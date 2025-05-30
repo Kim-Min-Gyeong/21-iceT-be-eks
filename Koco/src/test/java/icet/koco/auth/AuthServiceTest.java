@@ -1,6 +1,7 @@
 package icet.koco.auth;
 
 import icet.koco.auth.dto.AuthResponse;
+import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.service.AuthService;
 import icet.koco.auth.service.KakaoOAuthClient;
 import icet.koco.auth.dto.KakaoUserResponse;
@@ -23,6 +24,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -101,5 +103,45 @@ class AuthServiceTest {
         verify(oauthRepository).updateRefreshToken(eq(1L), eq("refresh_token"));
     }
 
+    @Test
+    void 신규_유저_카카오_로그인() {
+        // given
+        String code = "testCode";
+        var kakaoUser = KakaoUserResponse.builder()
+                .id(5678L)
+                .kakao_account(KakaoUserResponse.KakaoAccount.builder()
+                        .email("newUser@example.com")
+                        .profile(KakaoUserResponse.KakaoAccount.Profile.builder()
+                                .nickname("newUser")
+                                .profile_image_url("http://example.com/newUser.jpg")
+                                .build())
+                        .build())
+                .build();
+
+        var newUser = User.builder()
+                .id(2L)
+                .email("newUser@example.com")
+                .name("newUser")
+                .build();
+
+        given(kakaoOAuthClient.getUserInfo(code)).willReturn(kakaoUser);
+        given(userRepository.findByEmail("newUser@example.com")).willReturn(Optional.empty());
+        given(userRepository.save(any(User.class))).willReturn(newUser);
+        given(jwtTokenProvider.createAccessToken(newUser)).willReturn("access_token");
+        given(jwtTokenProvider.createRefreshToken(newUser)).willReturn("refresh_token");
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        var mockResponse = new MockHttpServletResponse();
+
+        // when
+        AuthResponse authResponse = authService.loginWithKakao(code, mockResponse);
+
+        // then
+        assertThat(authResponse.getCode()).isEqualTo("LOGIN_SUCCESS");
+        assertThat(authResponse.getData().getEmail()).isEqualTo("newUser@example.com");
+
+        verify(valueOperations).set(eq("2"), eq("refresh_token"));
+        verify(oauthRepository).save(any(OAuth.class));
+    }
 }
 
