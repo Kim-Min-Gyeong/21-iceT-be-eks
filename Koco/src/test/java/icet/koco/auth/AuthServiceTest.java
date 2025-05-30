@@ -1,6 +1,7 @@
 package icet.koco.auth;
 
 import icet.koco.auth.dto.AuthResponse;
+import icet.koco.auth.dto.LogoutResponse;
 import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.service.AuthService;
 import icet.koco.auth.service.KakaoOAuthClient;
@@ -10,6 +11,7 @@ import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import icet.koco.util.CookieUtil;
 import icet.koco.util.JwtTokenProvider;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
@@ -22,12 +24,13 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -143,5 +146,48 @@ class AuthServiceTest {
         verify(valueOperations).set(eq("2"), eq("refresh_token"));
         verify(oauthRepository).save(any(OAuth.class));
     }
+
+    @Test
+    void 정상_로그아웃() {
+        // Given
+        String accessToken = "validAccessToken";
+        Long userId = 1L;
+        long expiration = 1000L * 60 * 10; // 예: 10분
+
+        // 쿠키 mock
+        Cookie accessTokenCookie = new Cookie("access_token", accessToken);
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        HttpServletResponse mockResponse = mock(HttpServletResponse.class);
+        when(mockRequest.getCookies()).thenReturn(new Cookie[]{accessTokenCookie});
+
+        given(jwtTokenProvider.isInvalidToken(accessToken)).willReturn(true);
+        given(jwtTokenProvider.getUserIdFromToken(accessToken)).willReturn(userId);
+        given(jwtTokenProvider.getExpiration(accessToken)).willReturn(expiration);
+
+        // OAuth mock
+        OAuth oAuth = OAuth.builder()
+                .user(User.builder().id(userId).build())
+                .refreshToken("refreshToken")
+                .build();
+        given(oauthRepository.findByUserId(userId)).willReturn(Optional.of(oAuth));
+
+        // Redis mock
+        ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
+
+        // When
+        LogoutResponse logoutResponse = authService.logout(mockRequest, mockResponse);
+
+        // Then
+        assertThat(logoutResponse.getCode()).isEqualTo("LOGOUT_SUCCESS");
+        assertThat(logoutResponse.getMessage()).isEqualTo("로그아웃 성공.");
+
+        verify(oauthRepository).save(any(OAuth.class)); // refreshToken null 저장
+        verify(redisTemplate).delete(userId.toString());
+        verify(redisTemplate.opsForValue()).set(eq("BL:" + accessToken), eq("logout"), eq(expiration), eq(TimeUnit.MILLISECONDS));
+        verify(cookieUtil).invalidateCookie(mockResponse, "access_token");
+        verify(cookieUtil).invalidateCookie(mockResponse, "refresh_token");
+    }
+
 }
 
