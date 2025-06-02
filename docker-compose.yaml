@@ -11,7 +11,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - /home/ec2-user/logs:/app/logs   # ✅ 호스트 → 컨테이너 로그 마운트
+      - /home/ubuntu/logs:/app/logs   # ✅ 호스트 → 컨테이너 로그 마운트
 
   redis:
     image: redis:7.2
