@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-mkdir -p /home/ec2-user/logs
-cd /home/ec2-user/deploy
+mkdir -p /home/ubuntu/logs
+cd /home/ubuntu/deploy
 
 # ✅ SSM 파라미터에서 환경변수 로드 (예: Prefix /spring/)
 echo "[INFO] Fetching Spring Boot environment variables from SSM..."
