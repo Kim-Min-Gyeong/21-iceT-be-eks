@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   spring:
-    image: 266735804784.dkr.ecr.ap-northeast-2.amazonaws.com/app-repo/my-spring-app:latest
+    image: 266735804784.dkr.ecr.ap-northeast-2.amazonaws.com/app-repo:latest
     ports:
       - "8080:8080"
       - "6100:6100"
