@@ -36,9 +36,9 @@ echo "[INFO] Logging in to ECR..."
 aws ecr get-login-password --region ap-northeast-2 \
   | docker login --username AWS --password-stdin 266735804784.dkr.ecr.ap-northeast-2.amazonaws.com
 
-# 6. 최신 이미지를 ECR에서 풀
+# 6. 최신 이미지를 ECR에서 풀 (올바른 레포 이름: app-repo)
 echo "[INFO] Pulling latest image from ECR..."
-docker pull 266735804784.dkr.ecr.ap-northeast-2.amazonaws.com/app-repo/my-spring-app:latest
+docker pull 266735804784.dkr.ecr.ap-northeast-2.amazonaws.com/app-repo:latest
 
 # 7. Docker Compose로 애플리케이션 및 Redis 컨테이너 실행
 echo "[INFO] Starting up containers with Docker Compose..."
