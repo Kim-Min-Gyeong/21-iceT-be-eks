@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum ApiResponseCode {
     // 200
     SUCCESS("SUCCESS"),
+    POST_DETAIL_SUCCESS("POST_DETAIL_SUCCESS"),
 
     // 201
     CREATED("CREATED"),
