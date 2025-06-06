@@ -13,4 +13,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         "LEFT JOIN FETCH pc.category " +               // 연결된 카테고리
         "WHERE p.id = :postId AND p.deletedAt IS NULL")
     Optional<Post> findByIdWithUserAndCategories(@Param("postId") Long postId);
+
+    @Query("SELECT p FROM Post p " +
+        "JOIN FETCH p.user " +
+        "WHERE p.id = :postId AND p.deletedAt IS NULL")
+    Optional<Post> findByIdWithUser(@Param("postId") Long postId);
 }

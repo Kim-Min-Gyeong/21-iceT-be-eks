@@ -132,7 +132,7 @@ public class PostService {
      */
     @Transactional
     public void editPost(Long userId, Long postId, PostCreateEditRequestDto requestDto) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findByIdWithUserAndCategories(postId)
             .orElseThrow(() -> {
                 return new ResourceNotFoundException("해당 게시글이 존재하지 않습니다.");
             });
@@ -182,6 +182,25 @@ public class PostService {
 
         // 수정된 시간 저장
         post.setUpdatedAt(now());
+    }
 
+    /**
+     * 게시글 삭제
+     * @param userId 로그인된 유저의 Id
+     * @param postId 게시글 Id
+     */
+    @Transactional
+    public void deletePost(Long userId, Long postId) {
+        Post post = postRepository.findByIdWithUser(postId)
+            .orElseThrow(() -> new ResourceNotFoundException("해당 게시글이 존재하지 않습니다."));
+
+        // 권한 체크
+        if (!post.getUser().getId().equals(userId)) {
+            throw new UnauthorizedException("게시글 삭제 권한이 없습니다.");
+        }
+
+        // softDelete 처리
+        post.setDeletedAt(now());
+        log.info("softDelete post: {}", post);
     }
 }

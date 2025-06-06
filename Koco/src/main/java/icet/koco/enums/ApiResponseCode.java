@@ -7,6 +7,7 @@ public enum ApiResponseCode {
     // 200
     SUCCESS("SUCCESS"),
     POST_DETAIL_SUCCESS("POST_DETAIL_SUCCESS"),
+    POST_EDIT_SUCCESS("POST_EDIT_SUCCESS"),
 
     // 201
     CREATED("CREATED"),
