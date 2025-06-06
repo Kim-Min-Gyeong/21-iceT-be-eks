@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

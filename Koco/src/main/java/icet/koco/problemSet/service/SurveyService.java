@@ -2,7 +2,6 @@ package icet.koco.problemSet.service;
 
 import icet.koco.enums.DifficultyLevel;
 import icet.koco.global.exception.ResourceNotFoundException;
-import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.problemSet.dto.ProblemSetSurveyRequestDto;
 import icet.koco.problemSet.dto.ProblemSurveyRequestDto;
 import icet.koco.problemSet.dto.SurveyResponseDto;
