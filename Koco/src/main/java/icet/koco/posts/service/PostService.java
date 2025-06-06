@@ -27,8 +27,6 @@ public class PostService {
 
     @Transactional
     public Long createPost(Long userId, PostCreateRequestDto requestDto) {
-        log.info("Create post request: {}", requestDto);
-        log.info("User id: {}", userId);
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ForbiddenException("존재하지 않는 사용자입니다."));
@@ -43,10 +41,7 @@ public class PostService {
             .createdAt(now())
             .build();
 
-        log.info("Post Entity 생성 완료: {}", post);
-
         List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
-        log.debug("Categories: {}", categories);
 
         if (categories.size() != requestDto.getCategory().size()) {
             throw new IllegalArgumentException("존재하지 않는 카테고리가 포함되어 있습니다.");
@@ -58,7 +53,6 @@ public class PostService {
                 .build();
             post.addPostCategory(postCategory);
         }
-        log.debug("Categories: {}", categories);
 
         return postRepository.save(post).getId();
     }
