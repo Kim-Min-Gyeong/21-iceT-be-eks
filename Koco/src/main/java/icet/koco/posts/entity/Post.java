@@ -3,6 +3,9 @@ package icet.koco.posts.entity;
 import icet.koco.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.List;
+import java.util.ArrayList;
+
 
 import java.time.LocalDateTime;
 
@@ -47,4 +50,13 @@ public class Post {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostCategory> postCategories = new ArrayList<>();
+
+    public void addPostCategory(PostCategory postCategory) {
+        this.postCategories.add(postCategory);
+        postCategory.setPost(this);
+    }
 }
