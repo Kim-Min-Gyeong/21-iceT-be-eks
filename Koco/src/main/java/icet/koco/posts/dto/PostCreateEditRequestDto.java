@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class PostCreateRequestDto {
+public class PostCreateEditRequestDto {
     private Long problemNumber;
     private String title;
     private String content;
