@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,6 +57,16 @@ public class PostController {
         postService.editPost(userId, postId, requestDto);
 
         return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.POST_EDIT_SUCCESS, "게시글 수정 성공", null));
+    }
+
+    @DeleteMapping("/{postId}")
+    @Operation(summary = "게시글을 삭제하는 API입니다.")
+    public ResponseEntity<?> deletePost(@PathVariable Long postId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        postService.deletePost(userId, postId);
+
+        return ResponseEntity.noContent().build();
     }
 }
 
