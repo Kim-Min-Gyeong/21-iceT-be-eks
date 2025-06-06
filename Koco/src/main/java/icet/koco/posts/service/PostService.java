@@ -4,6 +4,7 @@ import static java.time.LocalDateTime.now;
 
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.posts.dto.PostCreateRequestDto;
+import icet.koco.posts.dto.PostCreateResponseDto;
 import icet.koco.posts.dto.PostGetDetailResponseDto;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.entity.PostCategory;
@@ -37,11 +38,12 @@ public class PostService {
      * @return postId
      */
     @Transactional
-    public Long createPost(Long userId, PostCreateRequestDto requestDto) {
-
+    public PostCreateResponseDto createPost(Long userId, PostCreateRequestDto requestDto) {
+        // 유저 조회
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ForbiddenException("존재하지 않는 사용자입니다."));
 
+        // Post Entity 생성
         Post post = Post.builder()
             .user(user)
             .problemNumber(requestDto.getProblemNumber())
@@ -52,12 +54,14 @@ public class PostService {
             .createdAt(now())
             .build();
 
+        // 카테고리 이름으로 Category 조회 
         List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
 
         if (categories.size() != requestDto.getCategory().size()) {
             throw new IllegalArgumentException("존재하지 않는 카테고리가 포함되어 있습니다.");
         }
 
+        // 중간테이블에 카테고리 매핑
         for (Category category : categories) {
             PostCategory postCategory = PostCategory.builder()
                 .category(category)
@@ -65,9 +69,21 @@ public class PostService {
             post.addPostCategory(postCategory);
         }
 
-        return postRepository.save(post).getId();
+        // 저장
+        postRepository.save(post);
+
+        // DTO에 담아 반환
+        return PostCreateResponseDto.builder()
+            .postId(post.getId())
+            .build();
     }
 
+    /**
+     * 게시글 상세 조회
+     * @param postId 게시글 Id
+     * @return PostGetDetailResponseDto
+     */
+    @Transactional(readOnly = true)
     public PostGetDetailResponseDto getPost(Long postId) {
         // 게시글 찾기
         Post post = postRepository.findByIdWithUserAndCategories(postId)

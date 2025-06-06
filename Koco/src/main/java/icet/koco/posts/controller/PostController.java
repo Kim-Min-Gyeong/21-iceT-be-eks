@@ -5,6 +5,7 @@ import static icet.koco.enums.ApiResponseCode.POST_DETAIL_SUCCESS;
 import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
 import icet.koco.posts.dto.PostCreateRequestDto;
+import icet.koco.posts.dto.PostCreateResponseDto;
 import icet.koco.posts.dto.PostGetDetailResponseDto;
 import icet.koco.posts.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,9 +32,9 @@ public class PostController {
     public ResponseEntity<?> createPost(@RequestBody PostCreateRequestDto requestDto) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        Long postId = postService.createPost(userId, requestDto);
+        PostCreateResponseDto responseDto = postService.createPost(userId, requestDto);
 
-        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.POST_CREATED, "게시물 등록에 성공했습니다.", postId));
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.POST_CREATED, "게시물 등록에 성공했습니다.", responseDto));
     }
 
     @GetMapping("/{postId}")
