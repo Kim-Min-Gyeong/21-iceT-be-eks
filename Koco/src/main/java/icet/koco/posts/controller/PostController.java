@@ -55,7 +55,7 @@ public class PostController {
 
         postService.editPost(userId, postId, requestDto);
 
-        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.SUCCESS, "게시글 수정 성공", null));
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.POST_EDIT_SUCCESS, "게시글 수정 성공", null));
     }
 }
 
