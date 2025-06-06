@@ -9,6 +9,7 @@ public enum ApiResponseCode {
 
     // 201
     CREATED("CREATED"),
+    POST_CREATED("POST_CREATED"),
 
     // 400
     BAD_REQUEST("BAD_REQUEST"),
