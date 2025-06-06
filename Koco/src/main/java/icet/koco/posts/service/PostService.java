@@ -4,8 +4,11 @@ import static java.time.LocalDateTime.now;
 
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.posts.dto.PostCreateRequestDto;
+import icet.koco.posts.dto.PostGetDetailResponseDto;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.entity.PostCategory;
+import icet.koco.posts.repository.CommentRepository;
+import icet.koco.posts.repository.LikeRepository;
 import icet.koco.posts.repository.PostRepository;
 import icet.koco.problemSet.entity.Category;
 import icet.koco.problemSet.repository.CategoryRepository;
@@ -24,7 +27,15 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final CommentRepository commentRepository;
+    private final LikeRepository likeRepository;
 
+    /**
+     * 게시물 등록
+     * @param userId 유저Id
+     * @param requestDto (number, title, content, category)
+     * @return postId
+     */
     @Transactional
     public Long createPost(Long userId, PostCreateRequestDto requestDto) {
 
@@ -55,5 +66,34 @@ public class PostService {
         }
 
         return postRepository.save(post).getId();
+    }
+
+    public PostGetDetailResponseDto getPost(Long postId) {
+        // 게시글 찾기
+        Post post = postRepository.findByIdWithUserAndCategories(postId)
+            .orElseThrow(() -> new ForbiddenException("해당 게시글이 존재하지 않습니다."));
+
+        // 댓글, 좋아요 수
+        Integer likeCount = likeRepository.countByPostId(postId);
+        Integer commentCount = commentRepository.countByPostId(postId);
+
+        // DTO에 맞춰서 반환
+        return PostGetDetailResponseDto.builder()
+            .postId(postId)
+            .title(post.getTitle())
+            .categories(
+                post.getPostCategories().stream()
+                    .map(c -> new PostGetDetailResponseDto.CategoryDto(c.getCategory().getId(), c.getCategory().getName()))
+                    .toList()
+            )
+            .content(post.getContent())
+            .author(PostGetDetailResponseDto.AuthorDto.builder()
+                .userId(post.getUser().getId())
+                .nickname(post.getUser().getNickname())
+                .imgUrl(post.getUser().getProfileImgUrl())
+                .build())
+            .commentCount(commentCount)
+            .likeCount(likeCount)
+            .build();
     }
 }
