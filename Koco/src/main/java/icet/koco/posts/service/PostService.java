@@ -54,7 +54,7 @@ public class PostService {
             .createdAt(now())
             .build();
 
-        // 카테고리 이름으로 Category 조회 
+        // 카테고리 이름으로 Category 조회
         List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
 
         if (categories.size() != requestDto.getCategory().size()) {

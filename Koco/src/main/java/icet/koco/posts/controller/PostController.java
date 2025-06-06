@@ -38,6 +38,7 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
+    @Operation(summary = "게시글 상세 조회를 하는 API 입니다.")
     public ResponseEntity<?> getPostDetail(@PathVariable Long postId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
