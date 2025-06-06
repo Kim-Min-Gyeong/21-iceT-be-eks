@@ -4,7 +4,7 @@ import static icet.koco.enums.ApiResponseCode.POST_DETAIL_SUCCESS;
 
 import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
-import icet.koco.posts.dto.PostCreateRequestDto;
+import icet.koco.posts.dto.PostCreateEditRequestDto;
 import icet.koco.posts.dto.PostCreateResponseDto;
 import icet.koco.posts.dto.PostGetDetailResponseDto;
 import icet.koco.posts.service.PostService;
@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,7 +30,7 @@ public class PostController {
 
     @PostMapping
     @Operation(summary = "게시글을 등록하는 API입니다.")
-    public ResponseEntity<?> createPost(@RequestBody PostCreateRequestDto requestDto) {
+    public ResponseEntity<?> createPost(@RequestBody PostCreateEditRequestDto requestDto) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         PostCreateResponseDto responseDto = postService.createPost(userId, requestDto);
@@ -47,4 +48,14 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.success(POST_DETAIL_SUCCESS, "게시물 상세 조회 성공", responseDto));
     }
 
+    @PatchMapping("/{postId}")
+    @Operation(summary = "게시글 수정을 하는 API 입니다.")
+    public ResponseEntity<?> editPost(@PathVariable Long postId, @RequestBody PostCreateEditRequestDto requestDto) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        postService.editPost(userId, postId, requestDto);
+
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.SUCCESS, "게시글 수정 성공", null));
+    }
 }
+

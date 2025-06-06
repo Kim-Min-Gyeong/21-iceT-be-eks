@@ -123,4 +123,65 @@ public class PostService {
             .likeCount(likeCount)
             .build();
     }
+
+    /**
+     * 게시글 수정
+     * @param userId 로그인된 유저의 Id
+     * @param postId 게시물 Id
+     * @param requestDto (problemNumber, title, content, categories)
+     */
+    @Transactional
+    public void editPost(Long userId, Long postId, PostCreateEditRequestDto requestDto) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> {
+                return new ResourceNotFoundException("해당 게시글이 존재하지 않습니다.");
+            });
+
+        // 권한 체크
+        if (!post.getUser().getId().equals(userId)) {
+            throw new UnauthorizedException("게시글 수정 권한이 없습니다.");
+        }
+
+        // 내용 저장
+        if (requestDto.getProblemNumber() != null) {
+            // 해당 문제가 존재하는지 확인
+            problemRepository.findByNumber(requestDto.getProblemNumber())
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "해당 문제 번호를 가진 Problem이 없습니다: " + requestDto.getProblemNumber()));
+            post.setProblemNumber(requestDto.getProblemNumber());
+
+        }
+
+        if (requestDto.getTitle() != null) {
+            post.setTitle(requestDto.getTitle());
+        }
+
+        if (requestDto.getContent() != null) {
+            post.setContent(requestDto.getContent());
+        }
+
+        if (requestDto.getCategory() != null) {
+            post.getPostCategories().clear();
+            postCategoryRepository.deleteByPost(post);
+
+            // 카테고리 이름으로 Category 조회
+            List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
+
+            if (categories.size() != requestDto.getCategory().size()) {
+                throw new IllegalArgumentException("존재하지 않는 카테고리가 포함되어 있습니다.");
+            }
+
+            // 중간테이블에 카테고리 매핑
+            for (Category category : categories) {
+                PostCategory postCategory = PostCategory.builder()
+                    .category(category)
+                    .build();
+                post.addPostCategory(postCategory);
+            }
+        }
+
+        // 수정된 시간 저장
+        post.setUpdatedAt(now());
+
+    }
 }
