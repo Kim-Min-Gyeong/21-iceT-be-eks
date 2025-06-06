@@ -3,16 +3,20 @@ package icet.koco.posts.service;
 import static java.time.LocalDateTime.now;
 
 import icet.koco.global.exception.ForbiddenException;
-import icet.koco.posts.dto.PostCreateRequestDto;
+import icet.koco.global.exception.ResourceNotFoundException;
+import icet.koco.global.exception.UnauthorizedException;
+import icet.koco.posts.dto.PostCreateEditRequestDto;
 import icet.koco.posts.dto.PostCreateResponseDto;
 import icet.koco.posts.dto.PostGetDetailResponseDto;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.entity.PostCategory;
 import icet.koco.posts.repository.CommentRepository;
 import icet.koco.posts.repository.LikeRepository;
+import icet.koco.posts.repository.PostCategoryRepository;
 import icet.koco.posts.repository.PostRepository;
 import icet.koco.problemSet.entity.Category;
 import icet.koco.problemSet.repository.CategoryRepository;
+import icet.koco.problemSet.repository.ProblemRepository;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import java.util.List;
@@ -30,6 +34,8 @@ public class PostService {
     private final CategoryRepository categoryRepository;
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
+    private final PostCategoryRepository postCategoryRepository;
+    private final ProblemRepository problemRepository;
 
     /**
      * 게시물 등록
@@ -38,10 +44,15 @@ public class PostService {
      * @return postId
      */
     @Transactional
-    public PostCreateResponseDto createPost(Long userId, PostCreateRequestDto requestDto) {
+    public PostCreateResponseDto createPost(Long userId, PostCreateEditRequestDto requestDto) {
         // 유저 조회
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ForbiddenException("존재하지 않는 사용자입니다."));
+
+        // 해당 문제가 존재하는지 확인
+        problemRepository.findByNumber(requestDto.getProblemNumber())
+            .orElseThrow(() -> new IllegalArgumentException(
+                "해당 문제 번호를 가진 Problem이 없습니다: " + requestDto.getProblemNumber()));
 
         // Post Entity 생성
         Post post = Post.builder()
