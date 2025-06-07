@@ -12,15 +12,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RequestMapping("/api/backend/v3/posts")
-@Controller
+@RestController
 @RequiredArgsConstructor
 @Tag(name = "Comment", description = "댓글 관련 API 입니다.")
 public class CommentController {
@@ -30,7 +30,6 @@ public class CommentController {
     @PostMapping("/{postId}/comments")
     @Operation(summary = "댓글 등록하는 API입니다.")
     public ResponseEntity<?> createComment(@PathVariable Long postId, @RequestBody CommentCreateRequestDto requestDto) {
-        log.info("댓글 등록 controller");
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         CommentCreateResponseDto responseDto = commentService.createComment(userId, postId, requestDto);
