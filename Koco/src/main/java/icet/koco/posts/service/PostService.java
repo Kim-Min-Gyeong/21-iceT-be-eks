@@ -108,6 +108,7 @@ public class PostService {
         return PostGetDetailResponseDto.builder()
             .postId(postId)
             .title(post.getTitle())
+            .createdAt(post.getCreatedAt())
             .categories(
                 post.getPostCategories().stream()
                     .map(c -> new PostGetDetailResponseDto.CategoryDto(c.getCategory().getId(), c.getCategory().getName()))
