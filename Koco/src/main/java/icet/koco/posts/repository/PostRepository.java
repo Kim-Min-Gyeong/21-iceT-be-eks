@@ -18,4 +18,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         "JOIN FETCH p.user " +
         "WHERE p.id = :postId AND p.deletedAt IS NULL")
     Optional<Post> findByIdWithUser(@Param("postId") Long postId);
+
+    Optional<Post> findByIdAndDeletedAtIsNull(Long postId);
 }

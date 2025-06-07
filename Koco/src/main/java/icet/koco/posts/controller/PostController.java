@@ -4,9 +4,9 @@ import static icet.koco.enums.ApiResponseCode.POST_DETAIL_SUCCESS;
 
 import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
-import icet.koco.posts.dto.PostCreateEditRequestDto;
-import icet.koco.posts.dto.PostCreateResponseDto;
-import icet.koco.posts.dto.PostGetDetailResponseDto;
+import icet.koco.posts.dto.post.PostCreateEditRequestDto;
+import icet.koco.posts.dto.post.PostCreateResponseDto;
+import icet.koco.posts.dto.post.PostGetDetailResponseDto;
 import icet.koco.posts.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
