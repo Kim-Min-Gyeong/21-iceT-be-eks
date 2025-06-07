@@ -95,14 +95,14 @@ public class PostService {
      * @return PostGetDetailResponseDto
      */
     @Transactional(readOnly = true)
-    public PostGetDetailResponseDto getPost(Long postId) {
+    public PostGetDetailResponseDto getPost(Long userId, Long postId) {
         // 게시글 찾기
         Post post = postRepository.findByIdWithUserAndCategories(postId)
             .orElseThrow(() -> new ForbiddenException("해당 게시글이 존재하지 않습니다."));
 
         // 댓글, 좋아요 수
         Integer likeCount = likeRepository.countByPostId(postId);
-        Integer commentCount = commentRepository.countByPostId(postId);
+        Integer commentCount = commentRepository.countByPostIdAndDeletedAtIsNull(postId);
 
         // DTO에 맞춰서 반환
         return PostGetDetailResponseDto.builder()

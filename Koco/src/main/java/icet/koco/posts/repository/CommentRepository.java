@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-    Integer countByPostId(Long postId);
+    Integer countByPostIdAndDeletedAtIsNull(Long postId);
 
     Optional<Comment> findByIdAndDeletedAtIsNull(Long id);
 
