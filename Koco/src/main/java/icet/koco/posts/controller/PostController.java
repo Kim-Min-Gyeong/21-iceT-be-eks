@@ -44,7 +44,7 @@ public class PostController {
     public ResponseEntity<?> getPostDetail(@PathVariable Long postId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        PostGetDetailResponseDto responseDto = postService.getPost(postId);
+        PostGetDetailResponseDto responseDto = postService.getPost(userId, postId);
 
         return ResponseEntity.ok(ApiResponse.success(POST_DETAIL_SUCCESS, "게시물 상세 조회 성공", responseDto));
     }

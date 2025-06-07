@@ -20,6 +20,7 @@ public class PostGetDetailResponseDto {
     private AuthorDto author;
     private Integer commentCount;
     private Integer likeCount;
+    private boolean liked;      // 로그인된 유저가 좋아요 눌렀는지 여부
 
     @Data
     @NoArgsConstructor

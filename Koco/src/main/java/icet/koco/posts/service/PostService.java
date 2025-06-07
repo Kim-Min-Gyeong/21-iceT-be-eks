@@ -104,6 +104,9 @@ public class PostService {
         Integer likeCount = likeRepository.countByPostId(postId);
         Integer commentCount = commentRepository.countByPostIdAndDeletedAtIsNull(postId);
 
+        // 로그인된 유저가 좋아요를 눌렀는지 여부
+        boolean liked = likeRepository.existsByUserIdAndPostId(userId, postId);
+
         // DTO에 맞춰서 반환
         return PostGetDetailResponseDto.builder()
             .postId(postId)
@@ -122,6 +125,7 @@ public class PostService {
                 .build())
             .commentCount(commentCount)
             .likeCount(likeCount)
+            .liked(liked)
             .build();
     }
 
