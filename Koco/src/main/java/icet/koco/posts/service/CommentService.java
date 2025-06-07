@@ -1,15 +1,15 @@
 package icet.koco.posts.service;
 
 import icet.koco.global.exception.ResourceNotFoundException;
-import icet.koco.posts.dto.comment.CommentCreateRequestDto;
-import icet.koco.posts.dto.comment.CommentCreateResponseDto;
+import icet.koco.global.exception.UnauthorizedException;
+import icet.koco.posts.dto.comment.CommentCreateEditRequestDto;
+import icet.koco.posts.dto.comment.CommentCreateEditResponseDto;
 import icet.koco.posts.entity.Comment;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.repository.CommentRepository;
 import icet.koco.posts.repository.PostRepository;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class CommentService {
     private final UserRepository userRepository;
 
     @Transactional
-    public CommentCreateResponseDto createComment(Long userId, Long postId, CommentCreateRequestDto requestDto) {
+    public CommentCreateEditResponseDto createComment(Long userId, Long postId, CommentCreateEditRequestDto requestDto) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
 
@@ -40,9 +40,31 @@ public class CommentService {
         commentRepository.save(comment);
         postRepository.incrementCommentCount(postId);
 
-        return CommentCreateResponseDto.builder()
+        return CommentCreateEditResponseDto.builder()
             .commentId(comment.getId())
             .build();
     }
 
+    @Transactional
+    public CommentCreateEditResponseDto editComment(Long userId, Long postId, Long commentId, CommentCreateEditRequestDto requestDto) {
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
+
+        Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
+
+        Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다."));
+
+        // 권한 체크
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new UnauthorizedException("해당 댓글을 수정할 권한이 없습니다.");
+        }
+
+        comment.setComment(requestDto.getContent());
+
+        return CommentCreateEditResponseDto.builder()
+            .commentId(comment.getId())
+            .build();
+    }
 }

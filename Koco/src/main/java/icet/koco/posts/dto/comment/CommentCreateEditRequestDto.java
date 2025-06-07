@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommentCreateRequestDto {
+public class CommentCreateEditRequestDto {
     private String content;
 }
