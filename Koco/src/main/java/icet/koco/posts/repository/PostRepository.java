@@ -3,6 +3,7 @@ package icet.koco.posts.repository;
 import icet.koco.posts.entity.Post;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,4 +21,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Optional<Post> findByIdWithUser(@Param("postId") Long postId);
 
     Optional<Post> findByIdAndDeletedAtIsNull(Long postId);
+
+    @Modifying
+    @Query("UPDATE Post p SET p.commentCount = p.commentCount + 1 WHERE p.id = :postId")
+    void incrementCommentCount(@Param("postId") Long postId);
+
 }

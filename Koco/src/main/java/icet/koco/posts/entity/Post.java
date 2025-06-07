@@ -59,4 +59,8 @@ public class Post {
         this.postCategories.add(postCategory);
         postCategory.setPost(this);
     }
+
+    public void addComment() {
+        this.commentCount++;
+    }
 }
