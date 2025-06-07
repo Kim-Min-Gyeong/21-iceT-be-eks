@@ -67,4 +67,24 @@ public class CommentService {
             .commentId(comment.getId())
             .build();
     }
+
+    @Transactional
+    public void deleteComment(Long userId, Long postId, Long commentId) {
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
+
+        Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
+
+        Comment comment = commentRepository.findByIdAndDeletedAtIsNull(commentId)
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 댓글입니다."));
+
+        // 권한 체크
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new UnauthorizedException("해당 댓글을 수정할 권한이 없습니다.");
+        }
+
+        comment.setDeletedAt(LocalDateTime.now());
+        postRepository.decreaseCommentCount(postId);
+    }
 }

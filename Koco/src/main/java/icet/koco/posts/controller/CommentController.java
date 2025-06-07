@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -39,6 +40,7 @@ public class CommentController {
     }
 
     @PutMapping("/{postId}/comments/{commentId}")
+    @Operation(summary = "댓글 수정하는 API입니다.")
     public ResponseEntity<?> editComment(@PathVariable Long postId, @PathVariable Long commentId, @RequestBody CommentCreateEditRequestDto requestDto) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -48,4 +50,11 @@ public class CommentController {
 
     }
 
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    @Operation(summary = "댓글 삭제하는 API입니다.")
+    public ResponseEntity<?> deleteComment(@PathVariable Long postId, @PathVariable Long commentId) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        commentService.deleteComment(userId, postId, commentId);
+        return ResponseEntity.noContent().build();
+    }
 }
