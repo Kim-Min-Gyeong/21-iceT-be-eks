@@ -5,6 +5,7 @@ import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
 import icet.koco.posts.dto.comment.CommentCreateEditRequestDto;
 import icet.koco.posts.dto.comment.CommentCreateEditResponseDto;
+import icet.koco.posts.dto.comment.CommentListResponseDto;
 import icet.koco.posts.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,11 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -56,5 +59,20 @@ public class CommentController {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         commentService.deleteComment(userId, postId, commentId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{postId}/comments")
+    @Operation(summary = "게시글의 댓글 리스트 조회 (커서 기반)")
+    public ResponseEntity<?> getComments(
+        @PathVariable Long postId,
+        @RequestParam(required = false) Long cursorId,
+        @RequestParam(defaultValue = "10") int size) {
+
+        CommentListResponseDto response = commentService.getComments(postId, cursorId, size);
+
+        return ResponseEntity.ok(ApiResponse.success(
+            ApiResponseCode.COMMENT_LIST_SUCCESS,
+            "댓글 리스트 조회 성공",
+            response));
     }
 }

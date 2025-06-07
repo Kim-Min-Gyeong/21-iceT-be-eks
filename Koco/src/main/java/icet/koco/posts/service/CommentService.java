@@ -4,6 +4,7 @@ import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.dto.comment.CommentCreateEditRequestDto;
 import icet.koco.posts.dto.comment.CommentCreateEditResponseDto;
+import icet.koco.posts.dto.comment.CommentListResponseDto;
 import icet.koco.posts.entity.Comment;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.repository.CommentRepository;
@@ -11,6 +12,7 @@ import icet.koco.posts.repository.PostRepository;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,4 +89,43 @@ public class CommentService {
         comment.setDeletedAt(LocalDateTime.now());
         postRepository.decreaseCommentCount(postId);
     }
+
+    @Transactional(readOnly = true)
+    public CommentListResponseDto getComments(Long postId, Long cursorId, int size) {
+        List<Comment> comments;
+
+        if (cursorId == null) {
+            comments = commentRepository.findTopByPostIdAndDeletedAtIsNullOrderByIdDesc(postId, size + 1);
+        } else {
+            comments = commentRepository.findNextPage(postId, cursorId, size + 1);
+        }
+
+        boolean hasNext = comments.size() > size;
+        if (hasNext) {
+            comments = comments.subList(0, size);
+        }
+
+        Long nextCursorId = hasNext ? comments.get(comments.size() - 1).getId() : null;
+
+        List<CommentListResponseDto.CommentDetailDto> commentDtos = comments.stream()
+            .map(c -> CommentListResponseDto.CommentDetailDto.builder()
+                .id(c.getId())
+                .comment(c.getComment())
+                .createdAt(c.getCreatedAt())
+                .author(CommentListResponseDto.AuthorDto.builder()
+                    .userId(c.getUser().getId())
+                    .nickname(c.getUser().getNickname())
+                    .imgUrl(c.getUser().getProfileImgUrl())
+                    .build())
+                .build())
+            .toList();
+
+        return CommentListResponseDto.builder()
+            .postId(postId)
+            .nextCursorId(nextCursorId)
+            .hasNext(hasNext)
+            .comments(commentDtos)
+            .build();
+    }
+
 }
