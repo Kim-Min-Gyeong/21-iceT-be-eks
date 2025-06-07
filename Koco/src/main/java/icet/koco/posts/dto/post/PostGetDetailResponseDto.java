@@ -1,5 +1,6 @@
-package icet.koco.posts.dto;
+package icet.koco.posts.dto.post;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class PostGetDetailResponseDto {
     private Long postId;
     private String title;
+    private LocalDateTime createdAt;
     private List<CategoryDto> categories;
     private String content;
     private AuthorDto author;

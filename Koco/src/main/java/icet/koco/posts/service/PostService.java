@@ -5,9 +5,9 @@ import static java.time.LocalDateTime.now;
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
-import icet.koco.posts.dto.PostCreateEditRequestDto;
-import icet.koco.posts.dto.PostCreateResponseDto;
-import icet.koco.posts.dto.PostGetDetailResponseDto;
+import icet.koco.posts.dto.post.PostCreateEditRequestDto;
+import icet.koco.posts.dto.post.PostCreateResponseDto;
+import icet.koco.posts.dto.post.PostGetDetailResponseDto;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.entity.PostCategory;
 import icet.koco.posts.repository.CommentRepository;
@@ -108,6 +108,7 @@ public class PostService {
         return PostGetDetailResponseDto.builder()
             .postId(postId)
             .title(post.getTitle())
+            .createdAt(post.getCreatedAt())
             .categories(
                 post.getPostCategories().stream()
                     .map(c -> new PostGetDetailResponseDto.CategoryDto(c.getCategory().getId(), c.getCategory().getName()))

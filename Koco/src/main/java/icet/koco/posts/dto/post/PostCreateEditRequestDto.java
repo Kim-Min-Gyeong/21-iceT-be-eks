@@ -1,4 +1,4 @@
-package icet.koco.posts.dto;
+package icet.koco.posts.dto.post;
 
 import java.util.List;
 import lombok.Builder;

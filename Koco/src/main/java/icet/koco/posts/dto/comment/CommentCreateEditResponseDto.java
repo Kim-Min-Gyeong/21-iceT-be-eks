@@ -1,4 +1,4 @@
-package icet.koco.posts.dto;
+package icet.koco.posts.dto.comment;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,9 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class PostCreateResponseDto {
-    private Long postId;
+public class CommentCreateEditResponseDto {
+    private Long commentId;
 }
