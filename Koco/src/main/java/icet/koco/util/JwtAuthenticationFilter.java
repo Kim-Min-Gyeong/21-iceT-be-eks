@@ -37,55 +37,75 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         FilterChain filterChain)
         throws ServletException, IOException {
 
-        String token = null;
-//        // 1️⃣ Authorization 헤더 우선
-//        String bearer = request.getHeader("Authorization");
-//        if (bearer != null && bearer.startsWith("Bearer ")) {
-//            token = bearer.substring(7);
-//        }
-//
-//        // 2️⃣ Authorization 헤더 없으면 쿠키에서 찾기
-        if (token == null && request.getCookies() != null) {
+        String token = resolveToken(request);
+
+        // 토큰이 없으면 401 바로 반환
+        if (token == null) {
+            handleUnauthorized(response, "TOKEN_NOT_FOUND", "Access Token이 존재하지 않습니다.");
+            return;
+        }
+
+        try {
+            // 유효성 검사 실패
+            if (!jwtTokenProvider.isInvalidToken(token)) {
+                handleUnauthorized(response, "INVALID_TOKEN", "Access Token이 만료되었거나 유효하지 않습니다.");
+                return;
+            }
+
+            // 레디스 블랙리스트 검사
+            if (redisTemplate.opsForValue().get("BL:" + token) != null) {
+                handleUnauthorized(response, "BLACKLISTED_TOKEN", "해당 토큰은 블랙리스트에 등록되어 있습니다.");
+                return;
+            }
+
+            // 유효한 토큰 → userId 추출 및 SecurityContext 등록
+            Long userId = jwtTokenProvider.getUserIdFromToken(token);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // 다음 필터로 진행
+            filterChain.doFilter(request, response);
+
+        } catch (Exception e) {
+            handleUnauthorized(response, "UNAUTHORIZED", "인증 처리 중 오류가 발생했습니다.");
+        }
+    }
+
+
+    /**
+     * Authorization 헤더 또는 쿠키에서 토큰 추출
+     */
+    private String resolveToken(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+
+        if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("access_token".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
+                    return cookie.getValue();
                 }
             }
         }
 
-        if (token != null) {
-            // 토큰 유효성 검사 실패
-            if (!jwtTokenProvider.isInvalidToken(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"expired token\"}");
-                response.getWriter().flush();
-                return;
-            }
+        return null;
+    }
 
-            // 블랙리스트 검사
-            String isBlacklisted = redisTemplate.opsForValue().get("BL:" + token);
-            if (isBlacklisted != null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"BL checked. expired token\"}");
-                response.getWriter().flush();
-                return;
-            }
-
-            // 정상 토큰 → userId 추출 및 인증 객체 생성
-            Long userId = jwtTokenProvider.getUserIdFromToken(token);
-
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    userId,
-                    null,
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
-
-        // 다음 필터로 진행
-        filterChain.doFilter(request, response);
+    /**
+     * 401 Unauthorized 응답 반환
+     */
+    private void handleUnauthorized(HttpServletResponse response, String code, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(
+            String.format("{\"code\":\"%s\",\"message\":\"%s\"}", code, message)
+        );
+        response.getWriter().flush();
     }
 }
+
