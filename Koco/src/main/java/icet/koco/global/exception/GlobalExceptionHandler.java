@@ -15,6 +15,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ApiResponseCode.BAD_REQUEST, ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(AlreadyLikedException.class)
+    public ResponseEntity<ApiResponse<?>> handleAlreadyLikedException(AlreadyLikedException ex) {
+        return buildErrorResponse(ApiResponseCode.ALREADY_EXISTS, ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<?>> handleUnauthorized(UnauthorizedException ex) {
         return buildErrorResponse(ApiResponseCode.UNAUTHORIZED, ex.getMessage(), HttpStatus.UNAUTHORIZED);

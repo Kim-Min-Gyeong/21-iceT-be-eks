@@ -12,7 +12,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "likes")
+@Table(name = "likes", uniqueConstraints = {
+    @UniqueConstraint(
+        name = "post_user_like_unique",
+        columnNames = {"post_id", "user_id"}
+    )
+} )
 public class Like {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

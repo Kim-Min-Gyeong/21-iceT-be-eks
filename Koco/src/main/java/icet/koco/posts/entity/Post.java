@@ -60,7 +60,7 @@ public class Post {
         postCategory.setPost(this);
     }
 
-    public void addComment() {
-        this.commentCount++;
-    }
+    @Version // 낙관적 락
+    @Column(name = "version")
+    private Long version = 0L;
 }

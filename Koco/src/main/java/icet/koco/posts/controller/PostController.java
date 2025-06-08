@@ -36,7 +36,7 @@ public class PostController {
 
         PostCreateResponseDto responseDto = postService.createPost(userId, requestDto);
 
-        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.POST_CREATED, "게시물 등록에 성공했습니다.", responseDto));
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.POST_CREATED, "게시글 등록에 성공했습니다.", responseDto));
     }
 
     @GetMapping("/{postId}")
@@ -44,9 +44,9 @@ public class PostController {
     public ResponseEntity<?> getPostDetail(@PathVariable Long postId) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        PostGetDetailResponseDto responseDto = postService.getPost(postId);
+        PostGetDetailResponseDto responseDto = postService.getPost(userId, postId);
 
-        return ResponseEntity.ok(ApiResponse.success(POST_DETAIL_SUCCESS, "게시물 상세 조회 성공", responseDto));
+        return ResponseEntity.ok(ApiResponse.success(POST_DETAIL_SUCCESS, "게시글 상세 조회 성공", responseDto));
     }
 
     @PatchMapping("/{postId}")

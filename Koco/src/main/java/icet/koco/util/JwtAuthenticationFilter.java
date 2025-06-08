@@ -1,6 +1,5 @@
 package icet.koco.util;
 
-import icet.koco.util.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -28,7 +27,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().equals("/api/backend/v1/auth/refresh");
+        return request.getRequestURI().equals("/api/backend/v1/auth/refresh")
+            || request.getRequestURI().equals("/api/backend/v1/auth/callback")
+            || request.getRequestURI().equals("/swagger-ui/index.html#/");
     }
 
     @Override
@@ -108,4 +109,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.getWriter().flush();
     }
 }
-

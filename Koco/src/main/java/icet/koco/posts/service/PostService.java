@@ -38,7 +38,7 @@ public class PostService {
     private final ProblemRepository problemRepository;
 
     /**
-     * 게시물 등록
+     * 게시글 등록
      * @param userId 유저Id
      * @param requestDto (number, title, content, category)
      * @return postId
@@ -95,14 +95,17 @@ public class PostService {
      * @return PostGetDetailResponseDto
      */
     @Transactional(readOnly = true)
-    public PostGetDetailResponseDto getPost(Long postId) {
+    public PostGetDetailResponseDto getPost(Long userId, Long postId) {
         // 게시글 찾기
         Post post = postRepository.findByIdWithUserAndCategories(postId)
             .orElseThrow(() -> new ForbiddenException("해당 게시글이 존재하지 않습니다."));
 
         // 댓글, 좋아요 수
         Integer likeCount = likeRepository.countByPostId(postId);
-        Integer commentCount = commentRepository.countByPostId(postId);
+        Integer commentCount = commentRepository.countByPostIdAndDeletedAtIsNull(postId);
+
+        // 로그인된 유저가 좋아요를 눌렀는지 여부
+        boolean liked = likeRepository.existsByUserIdAndPostId(userId, postId);
 
         // DTO에 맞춰서 반환
         return PostGetDetailResponseDto.builder()
@@ -122,13 +125,14 @@ public class PostService {
                 .build())
             .commentCount(commentCount)
             .likeCount(likeCount)
+            .liked(liked)
             .build();
     }
 
     /**
      * 게시글 수정
      * @param userId 로그인된 유저의 Id
-     * @param postId 게시물 Id
+     * @param postId 게시글 Id
      * @param requestDto (problemNumber, title, content, categories)
      */
     @Transactional
