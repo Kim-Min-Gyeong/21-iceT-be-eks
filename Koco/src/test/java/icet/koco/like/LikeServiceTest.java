@@ -89,7 +89,7 @@ class LikeServiceTest {
         // when & then
         assertThatThrownBy(() -> likeService.createLike(userId, postId))
             .isInstanceOf(AlreadyLikedException.class)
-            .hasMessage("이미 좋아요를 누른 게시물입니다.");
+            .hasMessage("이미 좋아요를 누른 게시글입니다.");
     }
 
     @Test

@@ -26,11 +26,11 @@ public class LikeService {
     @Transactional
     public LikeResponseDto createLike(Long userId, Long postId) {
         if (likeRepository.existsByUserIdAndPostId(userId, postId)) {
-            throw new AlreadyLikedException("이미 좋아요를 누른 게시물입니다.");
+            throw new AlreadyLikedException("이미 좋아요를 누른 게시글입니다.");
         }
 
         Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시물입니다."));
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
 
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다"));
@@ -69,7 +69,7 @@ public class LikeService {
 
     @Transactional
     public void deleteLike(Long userId, Long postId) {
-        // 사용자, 게시물 존재 확인
+        // 사용자, 게시글 존재 확인
         userRepository.findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
 

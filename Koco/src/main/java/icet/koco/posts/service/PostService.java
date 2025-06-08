@@ -38,7 +38,7 @@ public class PostService {
     private final ProblemRepository problemRepository;
 
     /**
-     * 게시물 등록
+     * 게시글 등록
      * @param userId 유저Id
      * @param requestDto (number, title, content, category)
      * @return postId
@@ -132,7 +132,7 @@ public class PostService {
     /**
      * 게시글 수정
      * @param userId 로그인된 유저의 Id
-     * @param postId 게시물 Id
+     * @param postId 게시글 Id
      * @param requestDto (problemNumber, title, content, categories)
      */
     @Transactional
