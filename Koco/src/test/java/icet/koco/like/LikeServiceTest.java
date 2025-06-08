@@ -10,6 +10,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 
 import icet.koco.global.exception.AlreadyLikedException;
+import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.posts.dto.like.LikeResponseDto;
 import icet.koco.posts.entity.Like;
@@ -61,6 +62,7 @@ class LikeServiceTest {
     }
 
     @Test
+    @DisplayName("좋아요 등록에 성공하면 LikeResponseDto 반환")
     void createLike_성공() {
         // given
         given(likeRepository.existsByUserIdAndPostId(userId, postId)).willReturn(false);
@@ -79,6 +81,7 @@ class LikeServiceTest {
     }
 
     @Test
+    @DisplayName("이미 좋아요를 누른 게시글에 다시 누르면 AlreadyLikedException 발생")
     void createLike_이미좋아요누름_예외() {
         // given
         given(likeRepository.existsByUserIdAndPostId(userId, postId)).willReturn(true);
@@ -90,6 +93,7 @@ class LikeServiceTest {
     }
 
     @Test
+    @DisplayName("좋아요 등록 중 낙관적 락 충돌 3회 실패 시 예외 발생")
     void createLike_낙관적락실패_예외() {
         // given
         given(likeRepository.existsByUserIdAndPostId(userId, postId)).willReturn(false);
@@ -111,7 +115,7 @@ class LikeServiceTest {
     }
 
     @Test
-    @DisplayName("좋아요 삭제가 성공적으로 진행되는지 확인하는 테스트")
+    @DisplayName("좋아요 삭제에 성공하면 예외 없이 완료")
     void deleteLike_성공() {
         Like like = Like.builder()
             .id(1L)
@@ -140,6 +144,7 @@ class LikeServiceTest {
     }
 
     @Test
+    @DisplayName("존재하지 않는 사용자로 좋아요 삭제 시 ResourceNotFoundException 발생")
     void deleteLike_사용자없음_예외() {
         // given
         given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.empty());
@@ -151,6 +156,7 @@ class LikeServiceTest {
     }
 
     @Test
+    @DisplayName("존재하지 않는 게시글에 좋아요 삭제 시 ResourceNotFoundException 발생")
     void deleteLike_게시글없음_예외() {
         // given
         given(postRepository.findByIdAndDeletedAtIsNull(postId)).willReturn(Optional.empty());
@@ -162,5 +168,80 @@ class LikeServiceTest {
             .hasMessage("존재하지 않는 게시글입니다.");
     }
 
-    
+    @Test
+    @DisplayName("좋아요를 누르지 않은 게시글에 대해 삭제 시 AlreadyLikedException 발생")
+    void deleteLike_이미좋아요취소_예외() {
+        // given
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
+        given(postRepository.findByIdAndDeletedAtIsNull(postId)).willReturn(Optional.of(post));
+        given(likeRepository.existsByUserIdAndPostId(userId, postId)).willReturn(false);
+
+        // when
+        assertThatThrownBy(() -> likeService.deleteLike(userId, postId))
+            .isInstanceOf(AlreadyLikedException.class)
+            .hasMessage("이미 좋아요 취소를 한 게시글입니다.");
+    }
+
+    @Test
+    @DisplayName("좋아요 엔티티가 존재하지 않을 경우 ResourceNotFoundException 발생")
+    void deleteLike_좋아요없음_예외() {
+        // given
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
+        given(postRepository.findByIdAndDeletedAtIsNull(postId)).willReturn(Optional.of(post));
+        given(likeRepository.existsByUserIdAndPostId(userId, postId)).willReturn(true);
+        given(likeRepository.findByUserIdAndPostId(userId, postId)).willReturn(Optional.empty());
+
+        // when
+        assertThatThrownBy(() -> likeService.deleteLike(userId, postId))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessage("좋아요가 존재하지 않습니다.");
+
+    }
+
+    @Test
+    @DisplayName("본인이 누른 좋아요가 아닐 경우 ForbiddenException 발생")
+    void deleteLike_다른사용자좋아요_예외() {
+        // given
+        User otherUser = User.builder().id(999L).build(); // userId와 다름
+        Like like = Like.builder().id(1L).user(otherUser).post(post).build();
+
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
+        given(postRepository.findByIdAndDeletedAtIsNull(postId)).willReturn(Optional.of(post));
+        given(likeRepository.existsByUserIdAndPostId(userId, postId)).willReturn(true);
+        given(likeRepository.findByUserIdAndPostId(userId, postId)).willReturn(Optional.of(like));
+
+        // when & then
+        assertThatThrownBy(() -> likeService.deleteLike(userId, postId))
+            .isInstanceOf(ForbiddenException.class)
+            .hasMessage("본인의 좋아요만 취소할 수 있습니다.");
+    }
+
+    @Test
+    @DisplayName("좋아요 삭제 중 낙관적 락 충돌 3회 실패 시 예외 발생")
+    void deleteLike_낙관적락실패_예외() {
+        Like like = Like.builder()
+            .id(1L)
+            .user(user)
+            .post(post)
+            .build();
+
+        // given
+        given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
+        given(postRepository.findByIdAndDeletedAtIsNull(postId)).willReturn(Optional.of(post));
+        given(likeRepository.existsByUserIdAndPostId(userId, postId)).willReturn(true);
+        given(likeRepository.findByUserIdAndPostId(userId, postId)).willReturn(Optional.of(like));
+        willDoNothing().given(likeRepository).delete(any(Like.class));
+
+        // 낙관적 락 실패 시 재시도 3회 다 실패하도록
+        given(postRepository.save(any(Post.class)))
+            .willThrow(ObjectOptimisticLockingFailureException.class);
+
+        given(postRepository.findByIdAndDeletedAtIsNull(postId))
+            .willReturn(Optional.of(post));
+
+        // when & then
+        assertThatThrownBy(() -> likeService.deleteLike(userId, postId))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("동시성 문제로 좋아요 취소에 실패했습니다.");
+    }
 }
