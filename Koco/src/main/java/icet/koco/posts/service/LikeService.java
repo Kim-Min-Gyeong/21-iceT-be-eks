@@ -66,4 +66,44 @@ public class LikeService {
             .build();
     }
 
+    @Transactional
+    public void deleteLike(Long userId, Long postId) {
+        // 사용자, 게시물 존재 확인
+        userRepository.findByIdAndDeletedAtIsNull(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
+
+        Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
+
+        // 좋아요 취소 확인
+        if (!likeRepository.existsByUserIdAndPostId(userId, postId)) {
+            throw new AlreadyLikedException("이미 좋아요 취소를 한 게시글입니다.");
+        }
+
+        // 좋아요 조회
+        Like like = likeRepository.findByUserIdAndPostId(userId, postId)
+            .orElseThrow(() -> new ResourceNotFoundException("좋아요가 존재하지 않습니다."));
+
+        // 좋아요 삭제
+        likeRepository.delete(like);
+
+        // 낙관적 락으로 likeCount 감소 (retry 3번)
+        boolean success = false;
+        int retry = 0;
+        while (!success && retry < 3) {
+            try {
+                post.setLikeCount(post.getLikeCount() - 1);
+                postRepository.save(post);
+                success = true;
+            } catch (ObjectOptimisticLockingFailureException e) {
+                retry++;
+                postRepository.findByIdAndDeletedAtIsNull(postId)
+                    .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
+            }
+        }
+
+        if (!success) {
+            throw new RuntimeException("동시성 문제로 좋아요 삭제에 실패하였습니다.");
+        }
+    }
 }
