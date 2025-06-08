@@ -1,6 +1,7 @@
 package icet.koco.posts.service;
 
 import icet.koco.global.exception.AlreadyLikedException;
+import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.posts.dto.like.LikeResponseDto;
 import icet.koco.posts.entity.Like;
@@ -84,6 +85,11 @@ public class LikeService {
         Like like = likeRepository.findByUserIdAndPostId(userId, postId)
             .orElseThrow(() -> new ResourceNotFoundException("좋아요가 존재하지 않습니다."));
 
+        // 본인 확인
+        if (!like.getUser().getId().equals(userId)) {
+            throw new ForbiddenException("본인의 좋아요만 취소할 수 있습니다.");
+        }
+
         // 좋아요 삭제
         likeRepository.delete(like);
 
@@ -103,7 +109,7 @@ public class LikeService {
         }
 
         if (!success) {
-            throw new RuntimeException("동시성 문제로 좋아요 삭제에 실패하였습니다.");
+            throw new RuntimeException("동시성 문제로 좋아요 취소에 실패했습니다.");
         }
     }
 }
