@@ -46,7 +46,6 @@ jobs:
       # 2) If manual dispatch, check for existing tag
       # ───────────────────────────────────────────────────────────────
       - name: Check if tag already exists in ECR
-        if: github.event_name == 'workflow_dispatch'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -67,7 +66,6 @@ jobs:
       # 3) Build & Push Docker image for both dev and main
       # ───────────────────────────────────────────────────────────────
       - name: Build and Push Docker image to ECR
-        if: github.event_name == 'workflow_dispatch' || github.ref =~ 'refs/heads/(dev|main)'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
