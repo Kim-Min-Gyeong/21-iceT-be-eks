@@ -97,6 +97,7 @@ jobs:
         run: |
           mkdir -p codedeploy/scripts
 
+          # appspec.yml (variables 필요 없음)
           cat << 'EOF' > codedeploy/appspec.yml
           version: 0.0
           os: linux
@@ -120,6 +121,7 @@ jobs:
                 runas: ubuntu
           EOF
 
+          # docker-compose.yaml (런너에서 $ECR_HOST/$ECR_REPO_NAME 치환)
           cat << EOF > codedeploy/docker-compose.yaml
           version: '3.8'
 
@@ -139,12 +141,15 @@ jobs:
                 - /home/ubuntu/logs:/app/logs
           EOF
 
+          # deploy.sh (인스턴스에서 사용할 변수 바인딩)
           cat << EOF > codedeploy/scripts/deploy.sh
           #!/bin/bash
           set -euo pipefail
 
-          # define SSM_PATH for this instance
           SSM_PATH="$SSM_PATH"
+          ECR_HOST="$ECR_HOST"
+          ECR_REPO_NAME="$ECR_REPO_NAME"
+          AWS_REGION="$AWS_REGION"
 
           mkdir -p /home/ubuntu/logs
           cd /home/ubuntu/deploy
@@ -159,23 +164,15 @@ jobs:
               echo "\$key=\$value" >> .env
           done
 
-          echo "[INFO] .env file generated:"
-          cat .env
-
-          echo "[INFO] Shutting down existing containers (if any)..."
-          docker compose down || true
-
           echo "[INFO] Logging in to ECR..."
-          aws ecr get-login-password --region $AWS_REGION \
-            | docker login --username AWS --password-stdin \$ECR_HOST
+          aws ecr get-login-password --region "\$AWS_REGION" \
+            | docker login --username AWS --password-stdin "\$ECR_HOST"
 
           echo "[INFO] Pulling latest image from ECR..."
-          docker pull \$ECR_HOST/\$ECR_REPO_NAME:latest
+          docker pull "\$ECR_HOST/\$ECR_REPO_NAME:latest"
 
           echo "[INFO] Starting up containers with Docker Compose..."
           docker compose up -d
-
-          echo "[INFO] Deployment complete."
           EOF
 
           chmod +x codedeploy/scripts/deploy.sh
