@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, Long>, CustomPostRepository {
     @Query("SELECT p FROM Post p " +
         "JOIN FETCH p.user " +                         // 작성자
         "LEFT JOIN FETCH p.postCategories pc " +       // 중간 엔티티
