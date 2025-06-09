@@ -66,7 +66,7 @@ public class CommentController {
     public ResponseEntity<?> getComments(
         @PathVariable Long postId,
         @RequestParam(required = false) Long cursorId,
-        @RequestParam(defaultValue = "10") int size) {
+        @RequestParam(defaultValue = "10") Integer size) {
 
         CommentListResponseDto response = commentService.getComments(postId, cursorId, size);
 

@@ -91,7 +91,7 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public CommentListResponseDto getComments(Long postId, Long cursorId, int size) {
+    public CommentListResponseDto getComments(Long postId, Long cursorId, Integer size) {
         List<Comment> comments;
 
         if (cursorId == null) {
