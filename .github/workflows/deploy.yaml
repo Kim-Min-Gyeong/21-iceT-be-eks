@@ -142,7 +142,7 @@ jobs:
           EOF
 
           # deploy.sh (인스턴스에서 사용할 변수 바인딩)
-          cat << EOF > codedeploy/scripts/deploy.sh
+          cat << 'EOF' > codedeploy/scripts/deploy.sh
           #!/bin/bash
           set -euo pipefail
 
