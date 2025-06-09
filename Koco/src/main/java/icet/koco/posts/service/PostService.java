@@ -8,6 +8,7 @@ import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.dto.post.PostCreateEditRequestDto;
 import icet.koco.posts.dto.post.PostCreateResponseDto;
 import icet.koco.posts.dto.post.PostGetDetailResponseDto;
+import icet.koco.posts.dto.post.PostListGetResponseDto;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.entity.PostCategory;
 import icet.koco.posts.repository.CommentRepository;
@@ -20,6 +21,8 @@ import icet.koco.problemSet.repository.ProblemRepository;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import java.util.List;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,7 +42,8 @@ public class PostService {
 
     /**
      * 게시글 등록
-     * @param userId 유저Id
+     *
+     * @param userId     유저Id
      * @param requestDto (number, title, content, category)
      * @return postId
      */
@@ -47,23 +51,23 @@ public class PostService {
     public PostCreateResponseDto createPost(Long userId, PostCreateEditRequestDto requestDto) {
         // 유저 조회
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ForbiddenException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new ForbiddenException("존재하지 않는 사용자입니다."));
 
         // 해당 문제가 존재하는지 확인
         problemRepository.findByNumber(requestDto.getProblemNumber())
-            .orElseThrow(() -> new IllegalArgumentException(
-                "해당 문제 번호를 가진 Problem이 없습니다: " + requestDto.getProblemNumber()));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "해당 문제 번호를 가진 Problem이 없습니다."));
 
         // Post Entity 생성
         Post post = Post.builder()
-            .user(user)
-            .problemNumber(requestDto.getProblemNumber())
-            .commentCount(0)
-            .likeCount(0)
-            .content(requestDto.getContent())
-            .title(requestDto.getTitle())
-            .createdAt(now())
-            .build();
+                .user(user)
+                .problemNumber(requestDto.getProblemNumber())
+                .commentCount(0)
+                .likeCount(0)
+                .content(requestDto.getContent())
+                .title(requestDto.getTitle())
+                .createdAt(now())
+                .build();
 
         // 카테고리 이름으로 Category 조회
         List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
@@ -75,8 +79,8 @@ public class PostService {
         // 중간테이블에 카테고리 매핑
         for (Category category : categories) {
             PostCategory postCategory = PostCategory.builder()
-                .category(category)
-                .build();
+                    .category(category)
+                    .build();
             post.addPostCategory(postCategory);
         }
 
@@ -85,12 +89,13 @@ public class PostService {
 
         // DTO에 담아 반환
         return PostCreateResponseDto.builder()
-            .postId(post.getId())
-            .build();
+                .postId(post.getId())
+                .build();
     }
 
     /**
      * 게시글 상세 조회
+     *
      * @param postId 게시글 Id
      * @return PostGetDetailResponseDto
      */
@@ -98,7 +103,7 @@ public class PostService {
     public PostGetDetailResponseDto getPost(Long userId, Long postId) {
         // 게시글 찾기
         Post post = postRepository.findByIdWithUserAndCategories(postId)
-            .orElseThrow(() -> new ForbiddenException("해당 게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("해당 게시글이 존재하지 않습니다."));
 
         // 댓글, 좋아요 수
         Integer likeCount = likeRepository.countByPostId(postId);
@@ -109,38 +114,37 @@ public class PostService {
 
         // DTO에 맞춰서 반환
         return PostGetDetailResponseDto.builder()
-            .postId(postId)
-            .title(post.getTitle())
-            .createdAt(post.getCreatedAt())
-            .categories(
-                post.getPostCategories().stream()
-                    .map(c -> new PostGetDetailResponseDto.CategoryDto(c.getCategory().getId(), c.getCategory().getName()))
-                    .toList()
-            )
-            .content(post.getContent())
-            .author(PostGetDetailResponseDto.AuthorDto.builder()
-                .userId(post.getUser().getId())
-                .nickname(post.getUser().getNickname())
-                .imgUrl(post.getUser().getProfileImgUrl())
-                .build())
-            .commentCount(commentCount)
-            .likeCount(likeCount)
-            .liked(liked)
-            .build();
+                .postId(postId)
+                .title(post.getTitle())
+                .createdAt(post.getCreatedAt())
+                .categories(
+                        post.getPostCategories().stream()
+                                .map(c -> new PostGetDetailResponseDto.CategoryDto(c.getCategory().getId(), c.getCategory().getName()))
+                                .toList()
+                )
+                .content(post.getContent())
+                .author(PostGetDetailResponseDto.AuthorDto.builder()
+                        .userId(post.getUser().getId())
+                        .nickname(post.getUser().getNickname())
+                        .imgUrl(post.getUser().getProfileImgUrl())
+                        .build())
+                .commentCount(commentCount)
+                .likeCount(likeCount)
+                .liked(liked)
+                .build();
     }
 
     /**
      * 게시글 수정
-     * @param userId 로그인된 유저의 Id
-     * @param postId 게시글 Id
+     *
+     * @param userId     로그인된 유저의 Id
+     * @param postId     게시글 Id
      * @param requestDto (problemNumber, title, content, categories)
      */
     @Transactional
     public void editPost(Long userId, Long postId, PostCreateEditRequestDto requestDto) {
         Post post = postRepository.findByIdWithUserAndCategories(postId)
-            .orElseThrow(() -> {
-                return new ResourceNotFoundException("해당 게시글이 존재하지 않습니다.");
-            });
+                .orElseThrow(() -> new ResourceNotFoundException("해당 게시글이 존재하지 않습니다."));
 
         // 권한 체크
         if (!post.getUser().getId().equals(userId)) {
@@ -151,8 +155,8 @@ public class PostService {
         if (requestDto.getProblemNumber() != null) {
             // 해당 문제가 존재하는지 확인
             problemRepository.findByNumber(requestDto.getProblemNumber())
-                .orElseThrow(() -> new IllegalArgumentException(
-                    "해당 문제 번호를 가진 Problem이 없습니다: " + requestDto.getProblemNumber()));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "해당 문제 번호를 가진 Problem이 없습니다: " + requestDto.getProblemNumber()));
             post.setProblemNumber(requestDto.getProblemNumber());
 
         }
@@ -179,8 +183,8 @@ public class PostService {
             // 중간테이블에 카테고리 매핑
             for (Category category : categories) {
                 PostCategory postCategory = PostCategory.builder()
-                    .category(category)
-                    .build();
+                        .category(category)
+                        .build();
                 post.addPostCategory(postCategory);
             }
         }
@@ -191,13 +195,14 @@ public class PostService {
 
     /**
      * 게시글 삭제
+     *
      * @param userId 로그인된 유저의 Id
      * @param postId 게시글 Id
      */
     @Transactional
     public void deletePost(Long userId, Long postId) {
         Post post = postRepository.findByIdWithUser(postId)
-            .orElseThrow(() -> new ResourceNotFoundException("해당 게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("해당 게시글이 존재하지 않습니다."));
 
         // 권한 체크
         if (!post.getUser().getId().equals(userId)) {
@@ -208,4 +213,50 @@ public class PostService {
         post.setDeletedAt(now());
         log.info("softDelete post: {}", post);
     }
+
+    @Transactional(readOnly = true)
+    public PostListGetResponseDto getPostList(List<String> category, String keyword, Long cursorId, int size) {
+        List<Post> posts;
+
+        posts = postRepository.searchPosts(category, keyword, cursorId, size + 1);
+
+        boolean hasNext = posts.size() > size;
+
+        Long nextCursorId = null;
+        if (hasNext) {
+//            nextCursorId = posts.get(size).getId();             // 잘리기 전에 다음 커서 미리 저장
+//            posts = posts.subList(0, size);                     // 그리고 자르기
+            Post lastPost = posts.remove(size); // 이건 remove(int index) → Post 리턴
+            nextCursorId = lastPost.getId();
+        }
+
+        List<PostListGetResponseDto.PostDetailDto> postDtos = posts.stream()
+                .map(post -> PostListGetResponseDto.PostDetailDto.builder()
+                        .postId(post.getId())
+                        .problemNumber(post.getProblemNumber())
+                        .title(post.getTitle())
+                        .createdAt(post.getCreatedAt())
+                        .categories(post.getPostCategories().stream()
+                                .map(pc -> PostListGetResponseDto.CategoryDto.builder()
+                                        .categoryId(pc.getCategory().getId())
+                                        .categoryName(pc.getCategory().getName())
+                                        .build())
+                                .toList())
+                        .author(PostListGetResponseDto.AuthorDto.builder()
+                                .userId(post.getUser().getId())
+                                .nickname(post.getUser().getNickname())
+                                .imgUrl(post.getUser().getProfileImgUrl())
+                                .build())
+                        .commentCount(post.getCommentCount())
+                        .likeCount(post.getLikeCount())
+                        .build())
+                .toList();
+
+        return PostListGetResponseDto.builder()
+                .nextCursorId(nextCursorId)
+                .hasNext(hasNext)
+                .posts(postDtos)
+                .build();
+    }
+
 }

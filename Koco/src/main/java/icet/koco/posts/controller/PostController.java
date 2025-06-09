@@ -7,20 +7,18 @@ import icet.koco.global.dto.ApiResponse;
 import icet.koco.posts.dto.post.PostCreateEditRequestDto;
 import icet.koco.posts.dto.post.PostCreateResponseDto;
 import icet.koco.posts.dto.post.PostGetDetailResponseDto;
+import icet.koco.posts.dto.post.PostListGetResponseDto;
 import icet.koco.posts.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/backend/v3/posts")
@@ -67,6 +65,25 @@ public class PostController {
         postService.deletePost(userId, postId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    @Operation(summary = "게시글 리스트를 조회하는 API입니다.")
+    public ResponseEntity<?> getPostList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) List<String> category,
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(required = false, defaultValue = "10") int size
+    ) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (category != null && category.size() > 5) {
+            throw new IllegalArgumentException("카테고리는 최대 5개까지 선택할 수 있습니다.");
+        }
+
+        PostListGetResponseDto responseDto = postService.getPostList(category, keyword, cursorId, size);
+
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.POST_LIST_SUCCESS, "게시글 리스트 조회에 성공하였습니다.", responseDto));
     }
 }
 
