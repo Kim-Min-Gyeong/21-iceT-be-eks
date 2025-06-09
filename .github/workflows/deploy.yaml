@@ -13,7 +13,7 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_HOST: ${{ secrets.ECR_HOST }}                # "266735804784.dkr.ecr.ap-northeast-2.amazonaws.com"
+  ECR_HOST: ${{ secrets.ECR_HOST }}         
   IMAGE_TAG: ${{ github.event.inputs.image_tag }}
   DEPLOY_ZIP_KEY: spring-app-deploy.zip
 
