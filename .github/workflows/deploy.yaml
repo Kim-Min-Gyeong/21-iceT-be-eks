@@ -12,7 +12,7 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_HOST: ${{ secrets.ECR_HOST }}         
+  ECR_HOST: ${{ secrets.ECR_HOST }}
   IMAGE_TAG: ${{ github.event.inputs.image_tag }}
   DEPLOY_ZIP_KEY: spring-app-deploy.zip
 
@@ -139,21 +139,24 @@ jobs:
                 - /home/ubuntu/logs:/app/logs
           EOF
 
-          cat << 'EOF' > codedeploy/scripts/deploy.sh
+          cat << EOF > codedeploy/scripts/deploy.sh
           #!/bin/bash
           set -euo pipefail
+
+          # define SSM_PATH for this instance
+          SSM_PATH="$SSM_PATH"
 
           mkdir -p /home/ubuntu/logs
           cd /home/ubuntu/deploy
 
           echo "[INFO] Fetching Spring Boot environment variables from SSM..."
           aws ssm get-parameters-by-path \
-            --path "$SSM_PATH" \
+            --path "\$SSM_PATH" \
             --with-decryption \
             --query "Parameters[*].{Name:Name,Value:Value}" \
             --output text | while read name value; do
-              key=$(basename "$name" | tr '.' '_' | tr '[:lower:]' '[:upper:]')
-              echo "$key=$value" >> .env
+              key=\$(basename "\$name" | tr '.' '_' | tr '[:lower:]' '[:upper:]')
+              echo "\$key=\$value" >> .env
           done
 
           echo "[INFO] .env file generated:"
@@ -164,10 +167,10 @@ jobs:
 
           echo "[INFO] Logging in to ECR..."
           aws ecr get-login-password --region $AWS_REGION \
-            | docker login --username AWS --password-stdin $ECR_HOST
+            | docker login --username AWS --password-stdin \$ECR_HOST
 
           echo "[INFO] Pulling latest image from ECR..."
-          docker pull $ECR_HOST/$ECR_REPO_NAME:latest
+          docker pull \$ECR_HOST/\$ECR_REPO_NAME:latest
 
           echo "[INFO] Starting up containers with Docker Compose..."
           docker compose up -d
@@ -188,14 +191,14 @@ jobs:
       - name: Upload to S3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{-- secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           aws s3 cp $DEPLOY_ZIP_KEY s3://$S3_BUCKET/$DEPLOY_ZIP_KEY
 
       - name: Trigger CodeDeploy
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{-- secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           aws deploy create-deployment \
             --application-name $CD_APP_NAME \
