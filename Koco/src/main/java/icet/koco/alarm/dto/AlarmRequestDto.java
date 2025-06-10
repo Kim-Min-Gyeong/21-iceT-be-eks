@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 public class AlarmRequestDto {
     private Long postId;
     private Long senderId;
-    private Long receiverId;
     private AlarmType alarmType;    // 'COMMENT' or 'LIKE'
+    private String url;
 }
