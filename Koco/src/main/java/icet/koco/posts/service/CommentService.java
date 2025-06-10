@@ -1,5 +1,9 @@
 package icet.koco.posts.service;
 
+import icet.koco.alarm.dto.AlarmRequestDto;
+import icet.koco.alarm.repository.AlarmRepository;
+import icet.koco.alarm.service.AlarmService;
+import icet.koco.enums.AlarmType;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.dto.comment.CommentCreateEditRequestDto;
@@ -14,6 +18,7 @@ import icet.koco.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +28,10 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final AlarmService alarmService;
+
+    @Value("${BASE_URL}")
+    private String BASE_URL;
 
     @Transactional
     public CommentCreateEditResponseDto createComment(Long userId, Long postId, CommentCreateEditRequestDto requestDto) {
@@ -40,6 +49,19 @@ public class CommentService {
             .build();
 
         commentRepository.save(comment);
+
+        // 본인이 댓글 단 거 말고 알림 생성
+        if (!post.getUser().getId().equals(user.getId())) {
+            AlarmRequestDto alarmRequestDto = AlarmRequestDto.builder()
+                .postId(post.getId())
+                .senderId(user.getId())
+                .alarmType(AlarmType.COMMENT)
+                .url(BASE_URL + "/posts/" + post.getId())
+                .build();
+
+            alarmService.createAlarmInternal(alarmRequestDto);
+        }
+
         postRepository.incrementCommentCount(postId);
 
         return CommentCreateEditResponseDto.builder()
@@ -127,5 +149,4 @@ public class CommentService {
             .comments(commentDtos)
             .build();
     }
-
 }

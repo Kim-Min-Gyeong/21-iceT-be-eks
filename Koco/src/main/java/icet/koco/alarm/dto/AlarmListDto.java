@@ -17,7 +17,11 @@ public class AlarmListDto {
     private int size;
     private List<AlarmDto> alarms;
 
-    static private class AlarmDto {
+    @Builder
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AlarmDto {
         private Long id;
         private Long postId;
         private String postTitle;
@@ -25,6 +29,7 @@ public class AlarmListDto {
         private Long senderId;
         private String senderNickname;
         private AlarmType alarmType;
+        private String url;
         private LocalDateTime createdAt;
     }
 }

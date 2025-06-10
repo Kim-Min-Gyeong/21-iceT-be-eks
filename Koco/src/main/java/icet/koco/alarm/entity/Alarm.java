@@ -50,10 +50,6 @@ public class Alarm {
     @Enumerated(EnumType.STRING)
     private AlarmType alarmType;
 
-    // 해당 게시글의 URL
-    @Column(name = "url")
-    private String url;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
