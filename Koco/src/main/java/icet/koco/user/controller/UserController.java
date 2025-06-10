@@ -2,7 +2,6 @@ package icet.koco.user.controller;
 
 import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
-import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
 import icet.koco.user.dto.UserInfoRequestDto;
 import icet.koco.user.dto.UserInfoResponseDto;
@@ -12,7 +11,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;

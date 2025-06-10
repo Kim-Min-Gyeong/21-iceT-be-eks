@@ -15,6 +15,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ApiResponseCode.BAD_REQUEST, ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(AlreadyLikedException.class)
+    public ResponseEntity<ApiResponse<?>> handleAlreadyLikedException(AlreadyLikedException ex) {
+        return buildErrorResponse(ApiResponseCode.ALREADY_EXISTS, ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<?>> handleUnauthorized(UnauthorizedException ex) {
         return buildErrorResponse(ApiResponseCode.UNAUTHORIZED, ex.getMessage(), HttpStatus.UNAUTHORIZED);
@@ -35,6 +40,8 @@ public class GlobalExceptionHandler {
         if (request.getRequestURI().contains("/v3/api-docs")) {
             return ResponseEntity.ok().build();
         }
+
+        ex.printStackTrace();
 
         return buildErrorResponse(ApiResponseCode.INTERNAL_SERVER_ERROR, "서버에서 에러가 발생하였습니다", HttpStatus.INTERNAL_SERVER_ERROR);
     }

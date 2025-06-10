@@ -4,13 +4,11 @@ import icet.koco.auth.dto.*;
 import icet.koco.auth.service.AuthService;
 import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
-import icet.koco.global.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
