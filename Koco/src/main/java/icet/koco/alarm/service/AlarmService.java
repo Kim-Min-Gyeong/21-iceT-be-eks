@@ -6,6 +6,7 @@ import icet.koco.alarm.dto.AlarmRequestDto;
 import icet.koco.alarm.emitter.EmitterRepository;
 import icet.koco.alarm.entity.Alarm;
 import icet.koco.alarm.repository.AlarmRepository;
+import icet.koco.alarm.repository.AlarmRepositoryImpl;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.repository.PostRepository;
@@ -33,9 +34,7 @@ public class AlarmService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final EmitterRepository emitterRepository;
-
-    @Value("${BASE_URL}")
-    private String baseUrl;
+    private final AlarmRepositoryImpl alarmRepositoryImpl;
 
     public void createAlarmInternal(AlarmRequestDto requestDto) {
         // 게시글, 알림 송수신자 찾기
@@ -166,6 +165,7 @@ public class AlarmService {
     @Transactional
     public AlarmListResponseDto getAlarmList(Long receiverId, Long cursorId, int size) {
         List<Alarm> alarms = alarmRepository.findByReceiverIdWithCursor(receiverId, cursorId, size);
+        int totalCount = alarmRepository.countByReceiverIdAndIsReadFalse(receiverId);
 
         boolean hasNext = alarms.size() > size;
         if (hasNext) {
@@ -189,6 +189,7 @@ public class AlarmService {
 
         return AlarmListResponseDto.builder()
                 .alarms(alarmDtos)
+                .totalCount(totalCount)
                 .cursorId(nextCursorId)
                 .hasNext(hasNext)
                 .build();

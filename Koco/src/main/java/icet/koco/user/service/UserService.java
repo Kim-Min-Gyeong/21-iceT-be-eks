@@ -132,6 +132,9 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("유저를 찾을 수 없습니다."));
 
+        System.out.println("로그인된 유저 Id: " + user.getId());
+        System.out.println("로그인된 유저 닉네임: " + user.getNickname());
+
         return UserInfoResponseDto.builder()
                 .userId(user.getId())
                 .nickname(user.getNickname())
