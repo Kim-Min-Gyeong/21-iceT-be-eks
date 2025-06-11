@@ -29,9 +29,6 @@ public class LikeService {
     private final UserRepository userRepository;
     private final AlarmService alarmService;
 
-    @Value("${BASE_URL}")
-    private String BASE_URL;
-
     @Transactional
     public LikeResponseDto createLike(Long userId, Long postId) {
         if (likeRepository.existsByUserIdAndPostId(userId, postId)) {

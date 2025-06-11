@@ -12,9 +12,10 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class AlarmListResponseDto {
-    private List<AlarmDto> alarms;
+    private int totalCount;
     private Long cursorId;       // 마지막 알람 ID
     private boolean hasNext;     // 다음 페이지 존재 여부
+    private List<AlarmDto> alarms;
 
     @Data
     @Builder

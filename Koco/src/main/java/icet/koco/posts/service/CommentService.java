@@ -30,8 +30,6 @@ public class CommentService {
     private final UserRepository userRepository;
     private final AlarmService alarmService;
 
-    @Value("${BASE_URL}")
-    private String BASE_URL;
 
     @Transactional
     public CommentCreateEditResponseDto createComment(Long userId, Long postId, CommentCreateEditRequestDto requestDto) {
