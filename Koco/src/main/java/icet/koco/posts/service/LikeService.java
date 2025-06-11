@@ -1,5 +1,9 @@
 package icet.koco.posts.service;
 
+import icet.koco.alarm.dto.AlarmRequestDto;
+import icet.koco.alarm.repository.AlarmRepository;
+import icet.koco.alarm.service.AlarmService;
+import icet.koco.enums.AlarmType;
 import icet.koco.global.exception.AlreadyLikedException;
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
@@ -12,6 +16,7 @@ import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +27,7 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final AlarmService alarmService;
 
     @Transactional
     public LikeResponseDto createLike(Long userId, Long postId) {
@@ -41,6 +47,16 @@ public class LikeService {
             .createdAt(LocalDateTime.now())
             .build();
         likeRepository.save(like);
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            AlarmRequestDto alarmRequestDto = AlarmRequestDto.builder()
+                .postId(post.getId())
+                .senderId(user.getId())
+                .alarmType(AlarmType.LIKE)
+                .build();
+
+            alarmService.createAlarmInternal(alarmRequestDto);
+        }
 
         // 낙관적 락으로 likeCount 증가 시도
         boolean success = false;
