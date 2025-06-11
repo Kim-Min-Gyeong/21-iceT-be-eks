@@ -27,10 +27,30 @@ public class AlarmRepositoryImpl implements AlarmRepositoryCustom {
         }
 
         return queryFactory
-                .selectFrom(alarm)
-                .where(builder)
-                .orderBy(alarm.id.desc())
-                .limit(size + 1)
-                .fetch();
+            .selectFrom(alarm)
+            .where(builder)
+            .orderBy(alarm.id.desc())
+            .limit(size + 1)
+            .fetch();
+    }
+
+    @Override
+    public List<Alarm> findByReceiverIdWithCursorAndIsReadFalse(Long receiverId, Long cursorId, int size) {
+        QAlarm alarm = QAlarm.alarm;
+
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(alarm.receiver.id.eq(receiverId));
+        builder.and(alarm.isRead.eq(false));
+
+        if (cursorId != null) {
+            builder.and(alarm.id.lt(cursorId));
+        }
+
+        return queryFactory
+            .selectFrom(alarm)
+            .where(builder)
+            .orderBy(alarm.id.desc())
+            .limit(size + 1)
+            .fetch();
     }
 }

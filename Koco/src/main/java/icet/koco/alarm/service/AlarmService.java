@@ -8,6 +8,7 @@ import icet.koco.alarm.entity.Alarm;
 import icet.koco.alarm.repository.AlarmRepository;
 import icet.koco.alarm.repository.AlarmRepositoryImpl;
 import icet.koco.global.exception.ResourceNotFoundException;
+import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.entity.Post;
 import icet.koco.posts.repository.PostRepository;
 import icet.koco.user.entity.User;
@@ -164,7 +165,7 @@ public class AlarmService {
 
     @Transactional
     public AlarmListResponseDto getAlarmList(Long receiverId, Long cursorId, int size) {
-        List<Alarm> alarms = alarmRepository.findByReceiverIdWithCursor(receiverId, cursorId, size);
+        List<Alarm> alarms = alarmRepository.findByReceiverIdWithCursorAndIsReadFalse(receiverId, cursorId, size);
         int totalCount = alarmRepository.countByReceiverIdAndIsReadFalse(receiverId);
 
         boolean hasNext = alarms.size() > size;
@@ -195,6 +196,29 @@ public class AlarmService {
                 .build();
     }
 
+    @Transactional
+    public void deleteAlarm(Long userId, Long alarmId) {
+        Alarm alarm = alarmRepository.findById(alarmId)
+                .orElseThrow(() -> new ResourceNotFoundException("해당 알림이 존재하지 않습니다."));
+
+        if (!alarm.getReceiver().getId().equals(userId)) {
+            throw new UnauthorizedException("본인의 알람만 삭제할 수 있습니다.");
+        }
+
+        alarmRepository.delete(alarm);
+    }
+
+    @Transactional
+    public void readAlarm(Long userId, Long alarmId) {
+        Alarm alarm = alarmRepository.findById(alarmId)
+            .orElseThrow(() -> new ResourceNotFoundException("해당 알림이 존재하지 않습니다."));
+
+        if (!alarm.getReceiver().getId().equals(userId)) {
+            throw new UnauthorizedException("본인의 알람만 삭제할 수 있습니다.");
+        }
+
+        alarm.setRead(true);
+    }
 
     String makeEmitterId(Long userId) {
         return userId + "_" + System.currentTimeMillis();
