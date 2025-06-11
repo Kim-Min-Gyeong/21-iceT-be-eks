@@ -56,7 +56,6 @@ public class CommentService {
                 .postId(post.getId())
                 .senderId(user.getId())
                 .alarmType(AlarmType.COMMENT)
-                .url(BASE_URL + "/posts/" + post.getId())
                 .build();
 
             alarmService.createAlarmInternal(alarmRequestDto);

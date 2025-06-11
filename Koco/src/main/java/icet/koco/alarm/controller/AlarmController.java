@@ -1,22 +1,17 @@
 package icet.koco.alarm.controller;
 
-import icet.koco.alarm.dto.AlarmListDto;
+import icet.koco.alarm.dto.AlarmListResponseDto;
 import icet.koco.alarm.dto.AlarmRequestDto;
 import icet.koco.alarm.emitter.EmitterRepository;
 import icet.koco.alarm.entity.Alarm;
 import icet.koco.alarm.service.AlarmService;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
+
+import icet.koco.enums.ApiResponseCode;
+import icet.koco.global.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.yaml.snakeyaml.emitter.Emitter;
 
@@ -43,5 +38,16 @@ public class AlarmController {
         return alarmService.subscribe(userId, lastEventId);
     }
 
+    @GetMapping
+    public ResponseEntity<?> getAlarms(
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(required = false, defaultValue = "10") int size)  {
+
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        AlarmListResponseDto responseDto = alarmService.getAlarmList(userId, cursorId, size);
+
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.SUCCESS, "알림 리스트 조회에 성공하였습니다.", responseDto));
+    }
 
 }

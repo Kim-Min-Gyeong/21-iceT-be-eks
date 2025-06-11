@@ -1,3 +1,4 @@
+// AlarmListResponseDto.java
 package icet.koco.alarm.dto;
 
 import icet.koco.enums.AlarmType;
@@ -6,20 +7,17 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Builder
 @Data
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
-public class AlarmListDto {
-    private Long cursorId;
-    private int size;
+public class AlarmListResponseDto {
     private List<AlarmDto> alarms;
+    private Long cursorId;       // 마지막 알람 ID
+    private boolean hasNext;     // 다음 페이지 존재 여부
 
-    @Builder
     @Data
-    @NoArgsConstructor
+    @Builder
     @AllArgsConstructor
     public static class AlarmDto {
         private Long id;
@@ -29,7 +27,7 @@ public class AlarmListDto {
         private Long senderId;
         private String senderNickname;
         private AlarmType alarmType;
-        private String url;
+//        private String url;
         private LocalDateTime createdAt;
     }
 }

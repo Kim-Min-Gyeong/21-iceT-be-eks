@@ -14,5 +14,4 @@ public class AlarmRequestDto {
     private Long postId;
     private Long senderId;
     private AlarmType alarmType;    // 'COMMENT' or 'LIKE'
-    private String url;
 }

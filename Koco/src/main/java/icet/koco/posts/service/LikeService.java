@@ -56,7 +56,6 @@ public class LikeService {
                 .postId(post.getId())
                 .senderId(user.getId())
                 .alarmType(AlarmType.LIKE)
-                .url(BASE_URL + "/posts/" + post.getId())
                 .build();
 
             alarmService.createAlarmInternal(alarmRequestDto);

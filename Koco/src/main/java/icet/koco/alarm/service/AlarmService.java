@@ -1,7 +1,7 @@
 package icet.koco.alarm.service;
 
-import icet.koco.alarm.dto.AlarmListDto;
-import icet.koco.alarm.dto.AlarmListDto.AlarmDto;
+import icet.koco.alarm.dto.AlarmListResponseDto;
+import icet.koco.alarm.dto.AlarmListResponseDto.AlarmDto;
 import icet.koco.alarm.dto.AlarmRequestDto;
 import icet.koco.alarm.emitter.EmitterRepository;
 import icet.koco.alarm.entity.Alarm;
@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,7 +72,6 @@ public class AlarmService {
             .senderId(sender.getId())
             .senderNickname(sender.getNickname())
             .alarmType(requestDto.getAlarmType())
-            .url(requestDto.getUrl())
             .createdAt(alarm.getCreatedAt())
             .build();
 
@@ -136,7 +138,7 @@ public class AlarmService {
         // 읽지 않은 알림(DB에 isRead = false)을 재전송
         List<Alarm> unreadAlarms = alarmRepository.findByReceiverIdAndIsReadFalse(userId);
         unreadAlarms.forEach(alarm -> {
-            AlarmListDto.AlarmDto dto = AlarmListDto.AlarmDto.builder()
+            AlarmListResponseDto.AlarmDto dto = AlarmListResponseDto.AlarmDto.builder()
                     .id(alarm.getId())
                     .postId(alarm.getPost().getId())
                     .postTitle(alarm.getPost().getTitle())
@@ -144,7 +146,6 @@ public class AlarmService {
                     .senderId(alarm.getSender().getId())
                     .senderNickname(alarm.getSender().getNickname())
                     .alarmType(alarm.getAlarmType())
-                    .url(baseUrl + "/posts/" + alarm.getPost().getId())
                     .createdAt(alarm.getCreatedAt())
                     .build();
 
@@ -161,6 +162,38 @@ public class AlarmService {
 
         return emitter;
     }
+
+    @Transactional
+    public AlarmListResponseDto getAlarmList(Long receiverId, Long cursorId, int size) {
+        List<Alarm> alarms = alarmRepository.findByReceiverIdWithCursor(receiverId, cursorId, size);
+
+        boolean hasNext = alarms.size() > size;
+        if (hasNext) {
+            alarms = alarms.subList(0, size); // 초과된 마지막 요소 제외
+        }
+
+        List<AlarmDto> alarmDtos = alarms.stream()
+                .map(a -> AlarmListResponseDto.AlarmDto.builder()
+                        .id(a.getId())
+                        .postId(a.getPost().getId())
+                        .postTitle(a.getPost().getTitle())
+                        .receiverId(a.getReceiver().getId())
+                        .senderId(a.getSender().getId())
+                        .senderNickname(a.getSender().getNickname())
+                        .alarmType(a.getAlarmType())
+                        .createdAt(a.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        Long nextCursorId = alarmDtos.isEmpty() ? null : alarmDtos.get(alarmDtos.size() - 1).getId();
+
+        return AlarmListResponseDto.builder()
+                .alarms(alarmDtos)
+                .cursorId(nextCursorId)
+                .hasNext(hasNext)
+                .build();
+    }
+
 
     String makeEmitterId(Long userId) {
         return userId + "_" + System.currentTimeMillis();
