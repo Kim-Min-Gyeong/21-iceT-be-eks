@@ -174,6 +174,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 return TopPostResponseDto.builder()
                     .postId(p.getId())
                     .title(p.getTitle())
+                    .problemNumber(p.getProblemNumber())
                     .likeCount(postIdToLikeCount.get(id).intValue())
                     .createdAt(p.getCreatedAt().toString())
                     .categories(p.getPostCategories().stream()

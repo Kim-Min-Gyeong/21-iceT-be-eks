@@ -115,6 +115,7 @@ public class PostService {
         return PostGetDetailResponseDto.builder()
                 .postId(postId)
                 .title(post.getTitle())
+                .problemNumber(post.getProblemNumber())
                 .createdAt(post.getCreatedAt())
                 .categories(
                         post.getPostCategories().stream()
