@@ -1,7 +1,6 @@
 package icet.koco.posts.service;
 
 import icet.koco.alarm.dto.AlarmRequestDto;
-import icet.koco.alarm.repository.AlarmRepository;
 import icet.koco.alarm.service.AlarmService;
 import icet.koco.enums.AlarmType;
 import icet.koco.global.exception.AlreadyLikedException;
@@ -16,7 +15,6 @@ import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
