@@ -1,5 +1,7 @@
 package icet.koco.posts.dto.post;
 
+import icet.koco.problemSet.entity.Category;
+import icet.koco.user.entity.User;
 import lombok.*;
 
 import java.time.LocalDateTime;
