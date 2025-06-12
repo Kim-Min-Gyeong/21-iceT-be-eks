@@ -2,6 +2,7 @@ package icet.koco.posts.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import icet.koco.posts.entity.Post;
+import icet.koco.posts.entity.QLike;
 import icet.koco.posts.entity.QPost;
 import icet.koco.posts.entity.QPostCategory;
 import icet.koco.problemSet.entity.QCategory;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -98,6 +100,31 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .leftJoin(postCategory.category, category).fetchJoin()
                 .where(post.id.in(postIds))
                 .orderBy(post.id.desc())
+                .fetch();
+    }
+
+    @Override
+    public List<Post> findTopPostsByLikesLastWeek(LocalDateTime start, LocalDateTime end, int limit) {
+        QPost post = QPost.post;
+        QLike like = QLike.like;
+
+        List<Long> postIds = queryFactory
+                .select(like.post.id)
+                .from(like)
+                .where(like.createdAt.between(start, end), like.post.deletedAt.isNull())
+                .groupBy(like.post.id)
+                .orderBy(like.post.id.count().desc())
+                .limit(limit)
+                .fetch();
+
+        if (postIds.isEmpty()) return List.of();
+
+        return queryFactory
+                .selectFrom(post)
+                .leftJoin(post.postCategories, QPostCategory.postCategory).fetchJoin()
+                .leftJoin(QPostCategory.postCategory.category, QCategory.category).fetchJoin()
+                .join(post.user, QUser.user).fetchJoin()
+                .where(post.id.in(postIds))
                 .fetch();
     }
 
