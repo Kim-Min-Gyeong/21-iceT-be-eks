@@ -185,20 +185,4 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
             })
             .collect(Collectors.toList());
     }
-
-
-    private List<Long> selectTopPostsWithTies(List<Tuple> postIdCounts, QLike like, int limit) {
-        if (postIdCounts.size() <= limit) {
-            return postIdCounts.stream()
-                .map(t -> t.get(like.post.id))
-                .collect(Collectors.toList());
-        }
-
-        long cutoffCount = postIdCounts.get(limit - 1).get(like.post.id.count());
-
-        return postIdCounts.stream()
-            .filter(t -> t.get(like.post.id.count()) >= cutoffCount)
-            .map(t -> t.get(like.post.id))
-            .collect(Collectors.toList());
-    }
 }
