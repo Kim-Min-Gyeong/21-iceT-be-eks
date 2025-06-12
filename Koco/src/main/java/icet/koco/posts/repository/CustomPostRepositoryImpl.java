@@ -15,7 +15,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomPostRepositoryImpl implements CustomPostRepository {
     private final JPAQueryFactory queryFactory;
-
     @Override
     public List<Post> searchPosts(List<String> categoryNames, String keyword, Long cursorId, int size) {
         QPost post = QPost.post;
@@ -28,6 +27,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .join(post.postCategories, postCategory)
                 .join(postCategory.category, category)
                 .where(
+                        post.deletedAt.isNull(),
                         cursorId != null ? post.id.loe(cursorId) : null,
                         StringUtils.hasText(keyword)
                                 ? (keyword.matches("\\d+")
@@ -47,14 +47,13 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
 
         List<Long> postIds = subQuery
                 .orderBy(post.id.desc())
-                .limit(size)  // ✅ Service에서 이미 +1을 전달했으므로 그대로 사용
+                .limit(size)
                 .fetch();
 
         if (postIds.isEmpty()) {
             return List.of();
         }
 
-        // ✅ slicing 로직 제거 - Service에서 처리하도록
         return queryFactory
                 .selectFrom(post)
                 .distinct()
@@ -64,5 +63,6 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .orderBy(post.id.desc())
                 .fetch();
     }
+
 }
 
