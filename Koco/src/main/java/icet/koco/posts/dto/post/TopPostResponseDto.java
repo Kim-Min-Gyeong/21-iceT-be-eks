@@ -14,6 +14,7 @@ import java.util.List;
 public class TopPostResponseDto {
     private Long postId;
     private String title;
+    private Long problemNumber;
     private int likeCount;
     private String createdAt;
     private List<CategoryDto> categories;
@@ -24,6 +25,7 @@ public class TopPostResponseDto {
         return TopPostResponseDto.builder()
                 .postId(post.getId())
                 .title(post.getTitle())
+                .problemNumber(post.getProblemNumber())
                 .likeCount(post.getLikeCount())
                 .createdAt(post.getCreatedAt().toString())
                 .categories(post.getPostCategories().stream()
