@@ -87,10 +87,11 @@ public class WeeklyTopPostCacheService {
         LocalDateTime end = LocalDate.now().minusWeeks(1).with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
 
         // 저번주 동안 좋아요 수가 많은 상위 5개 게시글 조회
-        List<Post> posts = postRepository.findTopPostsByLikesLastWeek(start, end, 5);
-        System.out.println("post.size() = " + posts.size());
+        List<TopPostResponseDto> topPosts = postRepository.findTopPostsDtoByLikesLastWeek(start, end, 5);
+        log.info("topPosts.size() = {}", topPosts.size());
 
-        return posts.stream().map(TopPostResponseDto::from).toList();
+
+        return topPosts;
     }
 
     /**
