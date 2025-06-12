@@ -4,16 +4,12 @@ import static icet.koco.enums.ApiResponseCode.POST_DETAIL_SUCCESS;
 
 import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
-import icet.koco.posts.dto.post.PostCreateEditRequestDto;
-import icet.koco.posts.dto.post.PostCreateResponseDto;
-import icet.koco.posts.dto.post.PostGetDetailResponseDto;
-import icet.koco.posts.dto.post.PostListGetResponseDto;
+import icet.koco.posts.dto.post.*;
 import icet.koco.posts.service.PostService;
+import icet.koco.posts.service.WeeklyTopPostCacheService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +21,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "Posts", description = "게시판 관련 API들 입니다.")
 public class PostController {
+
     private final PostService postService;
+    private final WeeklyTopPostCacheService weeklyTopPostCacheService;
 
     @PostMapping
     @Operation(summary = "게시글을 등록하는 API입니다.")
@@ -84,6 +82,17 @@ public class PostController {
         PostListGetResponseDto responseDto = postService.getPostList(category, keyword, cursorId, size);
 
         return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.POST_LIST_SUCCESS, "게시글 리스트 조회에 성공하였습니다.", responseDto));
+    }
+
+
+    @GetMapping("/top")
+    @Operation(summary = "인기 게시물 5개를 가져오는 API입니다.")
+    public ResponseEntity<?> getWeeklyTopPosts() {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        List<TopPostResponseDto> topPosts = weeklyTopPostCacheService.getOrGenerateTopPosts();
+
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.TOP_POST_LIST_SUCCESS, "인기 게시글 조회 성공", topPosts));
     }
 }
 
