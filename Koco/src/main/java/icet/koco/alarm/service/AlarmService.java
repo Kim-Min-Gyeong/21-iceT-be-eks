@@ -59,7 +59,7 @@ public class AlarmService {
             .build();
 
         alarmRepository.save(alarm);
-        log.info("📌 알림 생성 완료: alarmId={}, receiverId={}, senderId={}",
+        log.info(">>>>> 알림 생성 완료: alarmId={}, receiverId={}, senderId={}",
             alarm.getId(), receiver.getId(), sender.getId());
 
         // SSE 알림 DTO 구성
@@ -77,7 +77,7 @@ public class AlarmService {
         // SSE로 전송
         String receiverKey = String.valueOf(receiver.getId());
         Map<String, SseEmitter> emitters = emitterRepository.findAllEmitterByUserId(receiverKey);
-        log.info("📡 전송 대상 SSE emitter 수: {}", emitters.size());
+        log.info(">>>>> 전송 대상 SSE emitter 수: {}", emitters.size());
 
         emitters.forEach((emitterId, emitter) -> {
             try {
@@ -86,9 +86,9 @@ public class AlarmService {
                     .name("alarm")
                     .data(alarmDto));
                 emitterRepository.saveEventCache(emitterId, alarmDto); // 이벤트 캐시 저장
-                log.info("✅ 알림 전송 성공: emitterId={}", emitterId);
+                log.info(">>>>> 알림 전송 성공: emitterId={}", emitterId);
             } catch (IOException e) {
-                log.warn("❌ 알림 전송 실패: emitterId={}, error={}", emitterId, e.getMessage());
+                log.warn(">>>>> 알림 전송 실패: emitterId={}, error={}", emitterId, e.getMessage());
                 emitter.completeWithError(e);
                 emitterRepository.deleteById(emitterId);
             }

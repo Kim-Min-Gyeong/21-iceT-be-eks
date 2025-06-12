@@ -88,7 +88,6 @@ public class PostController {
     @GetMapping("/top")
     @Operation(summary = "인기 게시물 5개를 가져오는 API입니다.")
     public ResponseEntity<?> getWeeklyTopPosts() {
-        System.out.println("Controller: getWeeklyTopPosts");
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         List<TopPostResponseDto> topPosts = weeklyTopPostCacheService.getOrGenerateTopPosts();

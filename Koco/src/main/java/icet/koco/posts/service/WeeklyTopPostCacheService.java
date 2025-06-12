@@ -80,16 +80,12 @@ public class WeeklyTopPostCacheService {
      * @return
      */
     private List<TopPostResponseDto> calculateTopPostsOfLastWeek() {
-        System.out.println("WeeklyTopPostCacheService.calculateTopPostsOfLastWeek");
-
         // 날짜 계산
         LocalDateTime start = LocalDate.now().minusWeeks(1).with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime end = LocalDate.now().minusWeeks(1).with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
 
         // 저번주 동안 좋아요 수가 많은 상위 5개 게시글 조회
         List<TopPostResponseDto> topPosts = postRepository.findTopPostsDtoByLikesLastWeek(start, end, 5);
-        log.info("topPosts.size() = {}", topPosts.size());
-
 
         return topPosts;
     }
@@ -99,7 +95,6 @@ public class WeeklyTopPostCacheService {
      * @return
      */
     private String getCurrentWeekKey() {
-        System.out.println("WeeklyTopPostCacheService.getCurrentWeekKey");
         // 지난 주 월요일 값이 키
         LocalDate monday = LocalDate.now().minusWeeks(1).with(DayOfWeek.MONDAY);
         return REDIS_KEY_PREFIX + monday;
