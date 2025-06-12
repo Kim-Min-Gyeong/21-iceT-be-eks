@@ -5,6 +5,7 @@ import icet.koco.posts.entity.Post;
 import icet.koco.posts.entity.QPost;
 import icet.koco.posts.entity.QPostCategory;
 import icet.koco.problemSet.entity.QCategory;
+import icet.koco.user.entity.QUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -64,5 +65,58 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                 .fetch();
     }
 
+    @Override
+    public List<Post> getMyPosts(Long userId, Long cursorId, int size) {
+        QPost post = QPost.post;
+        QCategory category = QCategory.category;
+        QPostCategory postCategory = QPostCategory.postCategory;
+
+        var subQuery = queryFactory
+                .select(post.id)
+                .from(post)
+                .join(post.postCategories, postCategory)
+                .join(postCategory.category, category)
+                .where(
+                        post.user.id.eq(userId),
+                        post.deletedAt.isNull(),
+                        cursorId != null ? post.id.loe(cursorId) : null
+                )
+                .groupBy(post.id);
+
+        List<Long> postIds = subQuery
+                .orderBy(post.id.desc())
+                .limit(size)
+                .fetch();
+
+        if (postIds.isEmpty()) {
+            return List.of();
+        }
+
+        return queryFactory
+                .selectFrom(post)
+                .leftJoin(post.postCategories, postCategory).fetchJoin()
+                .leftJoin(postCategory.category, category).fetchJoin()
+                .where(post.id.in(postIds))
+                .orderBy(post.id.desc())
+                .fetch();
+    }
+
 }
 
+
+
+/*        return queryFactory
+                .selectFrom(post)
+                .leftJoin(post.user, user).fetchJoin()
+                .leftJoin(post.postCategories, postCategory).fetchJoin()
+                .leftJoin(postCategory.category, category).fetchJoin()
+                .where(
+                        post.user.id.eq(userId),
+                        post.deletedAt.isNull(),
+                        cursorId != null ? post.id.loe(cursorId) : null
+                )
+                .orderBy(post.id.desc())
+                .limit(size)
+                .fetch();
+
+ */

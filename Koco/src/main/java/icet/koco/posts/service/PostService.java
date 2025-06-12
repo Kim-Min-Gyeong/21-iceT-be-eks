@@ -25,6 +25,8 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -259,4 +261,43 @@ public class PostService {
                 .build();
     }
 
+    public PostListGetResponseDto getMyPostList(Long userId, Long cursorId, int size) {
+        List<Post> posts = postRepository.getMyPosts(userId, cursorId, size + 1);
+
+        boolean hasNext = posts.size() > size;
+        Long nextCursorId = null;
+
+        if (hasNext) {
+            Post lastPost = posts.remove(size);
+            nextCursorId = lastPost.getId();
+        }
+
+        List<PostListGetResponseDto.PostDetailDto> postDtos = posts.stream()
+                .map(post -> PostListGetResponseDto.PostDetailDto.builder()
+                        .postId(post.getId())
+                        .problemNumber(post.getProblemNumber())
+                        .title(post.getTitle())
+                        .createdAt(post.getCreatedAt())
+                        .categories(post.getPostCategories().stream()
+                                .map(pc -> PostListGetResponseDto.CategoryDto.builder()
+                                        .categoryId(pc.getCategory().getId())
+                                        .categoryName(pc.getCategory().getName())
+                                        .build())
+                                .toList())
+                        .author(PostListGetResponseDto.AuthorDto.builder()
+                                .userId(post.getUser().getId())
+                                .nickname(post.getUser().getNickname())
+                                .imgUrl(post.getUser().getProfileImgUrl())
+                                .build())
+                        .commentCount(post.getCommentCount())
+                        .likeCount(post.getLikeCount())
+                        .build())
+                .toList();
+
+        return PostListGetResponseDto.builder()
+                .nextCursorId(nextCursorId)
+                .hasNext(hasNext)
+                .posts(postDtos)
+                .build();
+    }
 }
