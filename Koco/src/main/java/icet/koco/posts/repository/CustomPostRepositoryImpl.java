@@ -2,6 +2,7 @@ package icet.koco.posts.repository;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import icet.koco.posts.dto.post.AuthorDto;
 import icet.koco.posts.dto.post.CategoryDto;
@@ -33,55 +34,65 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Post> searchPosts(List<String> categoryNames, String keyword, Long cursorId,
-        int size) {
+    public List<Post> searchPosts(List<String> categoryNames, String keyword, Long cursorId, int size) {
         QPost post = QPost.post;
         QCategory category = QCategory.category;
         QPostCategory postCategory = QPostCategory.postCategory;
 
-        var subQuery = queryFactory
-            .select(post.id)
-            .from(post)
-            .join(post.postCategories, postCategory)
-            .join(postCategory.category, category)
-            .where(
-                post.deletedAt.isNull(),
-                cursorId != null ? post.id.loe(cursorId) : null,
-                StringUtils.hasText(keyword)
-                    ? (keyword.matches("\\d+")
-                    ? post.problemNumber.eq(Long.parseLong(keyword))
-                    .or(post.title.containsIgnoreCase(keyword))
-                    : post.title.containsIgnoreCase(keyword))
-                    : null,
-                (categoryNames != null && !categoryNames.isEmpty())
-                    ? category.name.in(categoryNames)
-                    : null
-            )
-            .groupBy(post.id);
+        JPQLQuery<Long> subQuery = queryFactory
+                .select(post.id)
+                .from(post)
+                .where(
+                        post.deletedAt.isNull(),
+                        cursorId != null ? post.id.loe(cursorId) : null,
+                        StringUtils.hasText(keyword)
+                                ? (keyword.matches("\\d+")
+                                ? post.problemNumber.eq(Long.parseLong(keyword))
+                                .or(post.title.containsIgnoreCase(keyword))
+                                : post.title.containsIgnoreCase(keyword))
+                                : null
+                );
 
         if (categoryNames != null && !categoryNames.isEmpty()) {
-            subQuery.having(
-                postCategory.category.id.countDistinct().eq((long) categoryNames.size()));
+            subQuery = queryFactory
+                    .select(post.id)
+                    .from(post)
+                    .join(post.postCategories, postCategory)
+                    .join(postCategory.category, category)
+                    .where(
+                            post.deletedAt.isNull(),
+                            cursorId != null ? post.id.loe(cursorId) : null,
+                            StringUtils.hasText(keyword)
+                                    ? (keyword.matches("\\d+")
+                                    ? post.problemNumber.eq(Long.parseLong(keyword))
+                                    .or(post.title.containsIgnoreCase(keyword))
+                                    : post.title.containsIgnoreCase(keyword))
+                                    : null,
+                            category.name.in(categoryNames)
+                    )
+                    .groupBy(post.id)
+                    .having(category.id.countDistinct().eq((long) categoryNames.size()));
         }
 
         List<Long> postIds = subQuery
-            .orderBy(post.id.desc())
-            .limit(size)
-            .fetch();
+                .orderBy(post.createdAt.desc())
+                .limit(size)
+                .fetch();
 
         if (postIds.isEmpty()) {
             return List.of();
         }
 
         return queryFactory
-            .selectFrom(post)
-            .distinct()
-            .leftJoin(post.postCategories, postCategory).fetchJoin()
-            .leftJoin(postCategory.category, category).fetchJoin()
-            .where(post.id.in(postIds))
-            .orderBy(post.id.desc())
-            .fetch();
+                .selectFrom(post)
+                .distinct()
+                .leftJoin(post.postCategories, postCategory).fetchJoin()
+                .leftJoin(postCategory.category, category).fetchJoin()
+                .where(post.id.in(postIds))
+                .orderBy(post.id.desc())
+                .fetch();
     }
+
 
     @Override
     public List<Post> getMyPosts(Long userId, Long cursorId, int size) {
