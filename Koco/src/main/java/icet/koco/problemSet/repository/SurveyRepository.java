@@ -3,6 +3,7 @@ package icet.koco.problemSet.repository;
 import icet.koco.problemSet.entity.Survey;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,4 +14,8 @@ public interface SurveyRepository extends JpaRepository<Survey, Long> {
 
     List<Survey> findByUserId(Long userId);
 
+    // 사용자 Id로 작성된 설문 삭제
+    @Modifying
+    @Query("DELETE FROM Survey s WHERE s.user.id = :userId")
+    void deleteByUserId(@Param("userId")Long userId);
 }
