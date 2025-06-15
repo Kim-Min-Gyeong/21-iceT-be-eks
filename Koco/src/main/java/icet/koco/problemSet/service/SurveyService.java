@@ -61,7 +61,7 @@ public class SurveyService {
                 .user(user)
                 .problemSet(problemSet)
                 .problem(problem)
-                .isSolved(response.isSolved())
+                .isSolved(response.getIsSolved())
                 .difficultyLevel(DifficultyLevel.valueOf(response.getDifficultyLevel()))
                 .answeredAt(LocalDateTime.now())
                 .build();
