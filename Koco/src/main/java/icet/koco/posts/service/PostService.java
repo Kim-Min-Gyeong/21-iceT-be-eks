@@ -52,10 +52,16 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ForbiddenException("존재하지 않는 사용자입니다."));
 
+        List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
+
         // 해당 문제가 존재하는지 확인
         problemRepository.findByNumber(requestDto.getProblemNumber())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "해당 문제 번호를 가진 Problem이 없습니다."));
+                        "해당 문제 번호를 가진 백준 문제가 없습니다."));
+
+        if (categories.size() != requestDto.getCategory().size()) {
+            throw new IllegalArgumentException("존재하지 않는 카테고리가 포함되어 있습니다.");
+        }
 
         // Post Entity 생성
         Post post = Post.builder()
@@ -68,23 +74,17 @@ public class PostService {
                 .createdAt(now())
                 .build();
 
-        // 카테고리 이름으로 Category 조회
-        List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
-
-        if (categories.size() != requestDto.getCategory().size()) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리가 포함되어 있습니다.");
-        }
+        postRepository.save(post);
 
         // 중간테이블에 카테고리 매핑
         for (Category category : categories) {
             PostCategory postCategory = PostCategory.builder()
+                    .post(post)
                     .category(category)
                     .build();
             post.addPostCategory(postCategory);
+            postCategoryRepository.save(postCategory);
         }
-
-        // 저장
-        postRepository.save(post);
 
         // DTO에 담아 반환
         return PostCreateResponseDto.builder()
@@ -220,6 +220,7 @@ public class PostService {
 
         posts = postRepository.searchPosts(category, keyword, cursorId, size + 1);
 
+//        posts = postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc();
         boolean hasNext = posts.size() > size;
 
         Long nextCursorId = null;
