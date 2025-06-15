@@ -61,7 +61,7 @@ public class SurveyService {
                 .user(user)
                 .problemSet(problemSet)
                 .problem(problem)
-                .isSolved(response.isSolved())
+                .isSolved(response.getIsSolved())
                 .difficultyLevel(DifficultyLevel.valueOf(response.getDifficultyLevel()))
                 .answeredAt(LocalDateTime.now())
                 .build();
@@ -78,8 +78,6 @@ public class SurveyService {
         List<Long> savedIds = savedSurveys.stream()
             .map(Survey::getId)
             .toList();
-
-        log.info(">>>>> 저장된 설문 ID 목록: {}", savedIds);
 
         return SurveyResponseDto.builder()
             .code("SURVEY_CREATED")

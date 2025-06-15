@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProblemSurveyRequestDto {
     private Long problemId;
-    private boolean isSolved;
+    private Boolean isSolved;
     private String difficultyLevel;
 }
