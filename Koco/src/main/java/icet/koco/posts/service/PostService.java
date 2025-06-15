@@ -84,7 +84,6 @@ public class PostService {
                     .build();
             post.addPostCategory(postCategory);
             postCategoryRepository.save(postCategory);
-            System.out.println("Saving PostCategory with postId = " + post.getId() + ", categoryId = " + category.getId());
         }
 
         // DTO에 담아 반환
