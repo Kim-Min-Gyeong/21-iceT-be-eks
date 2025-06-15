@@ -79,8 +79,6 @@ public class SurveyService {
             .map(Survey::getId)
             .toList();
 
-        log.info(">>>>> 저장된 설문 ID 목록: {}", savedIds);
-
         return SurveyResponseDto.builder()
             .code("SURVEY_CREATED")
             .message("출제 문제집에 대한 설문응답이 성공적으로 생성되었습니다.")

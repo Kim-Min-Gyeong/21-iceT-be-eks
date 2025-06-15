@@ -98,7 +98,6 @@ public class UserAlgorithmStatsService {
         }
 
         userAlgorithmStatsRepository.saveAll(statsToSave);
-        log.info(">>>>> 유저 {} 알고리즘 통계 {}건 저장 완료 (정규화 방식 적용)", userId, statsToSave.size());
     }
 
 }
