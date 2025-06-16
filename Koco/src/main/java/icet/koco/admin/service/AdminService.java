@@ -34,8 +34,6 @@ public class AdminService {
             throw new IllegalArgumentException("일치하지 않는 문제 번호가 존재합니다.");
         }
 
-        System.out.println("problemNumbers: " + problems);
-
         // problem_set_problem 매핑
         List<ProblemSetProblem> mappings = problems.stream()
                 .map(p -> ProblemSetProblem.builder()
