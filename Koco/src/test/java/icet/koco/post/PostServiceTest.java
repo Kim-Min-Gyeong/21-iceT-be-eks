@@ -7,6 +7,10 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verify;
 
 import icet.koco.enums.ErrorMessage;
+import icet.koco.fixture.CategoryFixture;
+import icet.koco.fixture.PostFixture;
+import icet.koco.fixture.ProblemFixture;
+import icet.koco.fixture.UserFixture;
 import icet.koco.global.exception.BadRequestException;
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
@@ -26,7 +30,9 @@ import icet.koco.posts.repository.LikeRepository;
 import icet.koco.posts.repository.PostCategoryRepository;
 import icet.koco.posts.repository.PostRepository;
 import icet.koco.posts.service.PostService;
+import icet.koco.problemSet.entity.ProblemCategory;
 import icet.koco.problemSet.repository.CategoryRepository;
+import icet.koco.problemSet.repository.ProblemCategoryRepository;
 import icet.koco.problemSet.repository.ProblemRepository;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
@@ -64,8 +70,11 @@ public class PostServiceTest {
     @Mock
     private ProblemRepository problemRepository;
 
-    @Mock
-    private PostCategoryRepository postCategoryRepository;
+	@Mock
+	private ProblemCategoryRepository problemCategoryRepository;
+
+	@Mock
+	private PostCategoryRepository postCategoryRepository;
 
     Long userId = 1L;
     Long postId = 100L;
@@ -76,50 +85,15 @@ public class PostServiceTest {
     private Problem problem;
     private PostCreateEditRequestDto requestDto;
 
-    @BeforeEach
-    void setUp() {
-        user = User.builder()
-            .id(userId)
-            .nickname("테스트 유저")
-            .profileImgUrl("img.png")
-            .build();
+	@BeforeEach
+	void setUp() {
+		user = UserFixture.validUser();
+		category = CategoryFixture.category(1L, "dp");
+		problem = ProblemFixture.problem(1L, 10000L);
+		post = PostFixture.postWithCategory(user, category, 100L, 30000L);
+		requestDto = PostFixture.requestDto(30000L, List.of(category.getName()));
 
-        category = Category.builder()
-            .id(1L)
-            .name("dp")
-            .build();
-
-        PostCategory postCategory = PostCategory.builder()
-            .category(category)
-            .build();
-
-        post = Post.builder()
-            .id(postId)
-            .user(user)
-            .problemNumber(30000L)
-            .title("테스트 제목")
-            .content("테스트 내용")
-            .commentCount(5)
-            .likeCount(5)
-            .createdAt(LocalDateTime.of(2025, 6, 10, 12, 0))
-            .build();
-
-        post.addPostCategory(postCategory);
-
-        problem = Problem.builder()
-            .id(1L)
-            .number(30000L)
-            .build();
-
-        requestDto = PostCreateEditRequestDto.builder()
-            .problemNumber(30000L)
-            .title("테스트 제목")
-            .content("테스트 내용")
-            .category(List.of("dp"))
-            .build();
-
-    }
-
+	}
 
     @Nested
     @DisplayName("게시글 생성")
@@ -141,8 +115,8 @@ public class PostServiceTest {
             then(postRepository).should().save(postCaptor.capture());
 
             Post savedPost = postCaptor.getValue();
-            assertThat(savedPost.getTitle()).isEqualTo("테스트 제목");
-            assertThat(savedPost.getContent()).isEqualTo("테스트 내용");
+            assertThat(savedPost.getTitle()).isEqualTo(PostFixture.TEST_TITLE);
+            assertThat(savedPost.getContent()).isEqualTo(PostFixture.TEST_CONTENT);
             assertThat(savedPost.getUser()).isEqualTo(user);
             assertThat(savedPost.getProblemNumber()).isEqualTo(30000L);
             assertThat(savedPost.getPostCategories().size()).isEqualTo(1);
@@ -201,15 +175,15 @@ public class PostServiceTest {
             // then
             assertThat(responseDto).isNotNull();
             assertThat(responseDto.getPostId()).isEqualTo(postId);
-            assertThat(responseDto.getTitle()).isEqualTo("테스트 제목");
-            assertThat(responseDto.getContent()).isEqualTo("테스트 내용");
+            assertThat(responseDto.getTitle()).isEqualTo(PostFixture.TEST_TITLE);
+            assertThat(responseDto.getContent()).isEqualTo(PostFixture.TEST_CONTENT);
             assertThat(responseDto.getLikeCount()).isEqualTo(5);
             assertThat(responseDto.getCommentCount()).isEqualTo(5);
             assertThat(responseDto.isLiked()).isFalse();
             assertThat(responseDto.getCategories().size()).isEqualTo(1);
             assertThat(responseDto.getCategories().get(0).getCategoryName()).isEqualTo("dp");
             assertThat(responseDto.getAuthor().getUserId()).isEqualTo(userId);
-            assertThat(responseDto.getAuthor().getNickname()).isEqualTo("테스트 유저");
+            assertThat(responseDto.getAuthor().getNickname()).isEqualTo("테스트 닉네임");
         }
 
         @Test
@@ -233,8 +207,8 @@ public class PostServiceTest {
             // given
             PostCreateEditRequestDto requestDto = PostCreateEditRequestDto.builder()
                 .problemNumber(2000L)
-                .title("수정된 제목")
-                .content("수정된 내용")
+                .title(PostFixture.UPDATED_TITLE)
+                .content(PostFixture.UPDATED_CONTENT)
                 .category(List.of("dp"))
                 .build();
 
@@ -247,8 +221,8 @@ public class PostServiceTest {
 
             // then
             assertThat(post.getProblemNumber()).isEqualTo(2000L);
-            assertThat(post.getTitle()).isEqualTo("수정된 제목");
-            assertThat(post.getContent()).isEqualTo("수정된 내용");
+            assertThat(post.getTitle()).isEqualTo(PostFixture.UPDATED_TITLE);
+            assertThat(post.getContent()).isEqualTo(PostFixture.UPDATED_CONTENT);
             assertThat(post.getPostCategories().size()).isEqualTo(1);
             assertThat(post.getPostCategories().get(0).getCategory().getName()).isEqualTo("dp");
             assertThat(post.getUpdatedAt()).isNotNull();
