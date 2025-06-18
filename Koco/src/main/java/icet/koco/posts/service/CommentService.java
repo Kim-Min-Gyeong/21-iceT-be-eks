@@ -1,5 +1,8 @@
 package icet.koco.posts.service;
 
+import icet.koco.alarm.dto.AlarmRequestDto;
+import icet.koco.alarm.service.AlarmService;
+import icet.koco.enums.AlarmType;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.dto.comment.CommentCreateEditRequestDto;
@@ -23,6 +26,8 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final AlarmService alarmService;
+
 
     @Transactional
     public CommentCreateEditResponseDto createComment(Long userId, Long postId, CommentCreateEditRequestDto requestDto) {
@@ -40,6 +45,18 @@ public class CommentService {
             .build();
 
         commentRepository.save(comment);
+
+        // 본인이 댓글 단 거 말고 알림 생성
+        if (!post.getUser().getId().equals(user.getId())) {
+            AlarmRequestDto alarmRequestDto = AlarmRequestDto.builder()
+                .postId(post.getId())
+                .senderId(user.getId())
+                .alarmType(AlarmType.COMMENT)
+                .build();
+
+            alarmService.createAlarmInternal(alarmRequestDto);
+        }
+
         postRepository.incrementCommentCount(postId);
 
         return CommentCreateEditResponseDto.builder()
@@ -127,5 +144,4 @@ public class CommentService {
             .comments(commentDtos)
             .build();
     }
-
 }

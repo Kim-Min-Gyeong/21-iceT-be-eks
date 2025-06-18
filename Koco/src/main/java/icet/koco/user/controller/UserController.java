@@ -2,6 +2,8 @@ package icet.koco.user.controller;
 
 import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
+import icet.koco.posts.dto.post.PostListGetResponseDto;
+import icet.koco.posts.service.PostService;
 import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
 import icet.koco.user.dto.UserInfoRequestDto;
 import icet.koco.user.dto.UserInfoResponseDto;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final PostService postService;
 
     /**
      * 사용자 탈퇴 API
@@ -110,5 +113,17 @@ public class UserController {
 
         UserAlgorithmStatsResponseDto response = userService.getAlgorithmStats(userId);
         return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.SUCCESS, "유저 알고리즘 스탯 정보 조회 성공", response));
+    }
+
+    @Operation(summary = "유저가 작성한 게시글 리스트 조회")
+    @GetMapping("/myposts")
+    public ResponseEntity<?> getMyPosts(
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(required = false, defaultValue = "10") int size) {
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        PostListGetResponseDto responseDto = postService.getMyPostList(userId, cursorId, size);
+
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.MY_POST_LIST_SUCCESS, "내가 작성한 게시물 조회 성공", responseDto));
     }
 }

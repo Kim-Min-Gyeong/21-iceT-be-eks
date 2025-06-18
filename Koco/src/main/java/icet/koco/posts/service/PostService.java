@@ -22,7 +22,6 @@ import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
 import java.util.List;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -51,12 +50,18 @@ public class PostService {
     public PostCreateResponseDto createPost(Long userId, PostCreateEditRequestDto requestDto) {
         // 유저 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new ForbiddenException("존재하지 않는 사용자입니다."));
+
+        List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
 
         // 해당 문제가 존재하는지 확인
         problemRepository.findByNumber(requestDto.getProblemNumber())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "해당 문제 번호를 가진 Problem이 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "해당 문제 번호를 가진 백준 문제가 없습니다."));
+
+        if (categories.size() != requestDto.getCategory().size()) {
+            throw new IllegalArgumentException("존재하지 않는 카테고리가 포함되어 있습니다.");
+        }
 
         // Post Entity 생성
         Post post = Post.builder()
@@ -69,23 +74,17 @@ public class PostService {
                 .createdAt(now())
                 .build();
 
-        // 카테고리 이름으로 Category 조회
-        List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
-
-        if (categories.size() != requestDto.getCategory().size()) {
-            throw new ResourceNotFoundException("존재하지 않는 카테고리가 포함되어 있습니다.");
-        }
+        postRepository.save(post);
 
         // 중간테이블에 카테고리 매핑
         for (Category category : categories) {
             PostCategory postCategory = PostCategory.builder()
+                    .post(post)
                     .category(category)
                     .build();
             post.addPostCategory(postCategory);
+            postCategoryRepository.save(postCategory);
         }
-
-        // 저장
-        postRepository.save(post);
 
         // DTO에 담아 반환
         return PostCreateResponseDto.builder()
@@ -103,7 +102,7 @@ public class PostService {
     public PostGetDetailResponseDto getPost(Long userId, Long postId) {
         // 게시글 찾기
         Post post = postRepository.findByIdWithUserAndCategories(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("해당 게시글이 존재하지 않습니다."));
+                .orElseThrow(() -> new ForbiddenException("해당 게시글이 존재하지 않습니다."));
 
         // 댓글, 좋아요 수
         Integer likeCount = likeRepository.countByPostId(postId);
@@ -116,6 +115,7 @@ public class PostService {
         return PostGetDetailResponseDto.builder()
                 .postId(postId)
                 .title(post.getTitle())
+                .problemNumber(post.getProblemNumber())
                 .createdAt(post.getCreatedAt())
                 .categories(
                         post.getPostCategories().stream()
@@ -155,7 +155,7 @@ public class PostService {
         if (requestDto.getProblemNumber() != null) {
             // 해당 문제가 존재하는지 확인
             problemRepository.findByNumber(requestDto.getProblemNumber())
-                    .orElseThrow(() -> new ResourceNotFoundException(
+                    .orElseThrow(() -> new IllegalArgumentException(
                             "해당 문제 번호를 가진 Problem이 없습니다: " + requestDto.getProblemNumber()));
             post.setProblemNumber(requestDto.getProblemNumber());
 
@@ -177,7 +177,7 @@ public class PostService {
             List<Category> categories = categoryRepository.findByNameIn(requestDto.getCategory());
 
             if (categories.size() != requestDto.getCategory().size()) {
-                throw new ResourceNotFoundException("존재하지 않는 카테고리가 포함되어 있습니다.");
+                throw new IllegalArgumentException("존재하지 않는 카테고리가 포함되어 있습니다.");
             }
 
             // 중간테이블에 카테고리 매핑
@@ -220,6 +220,7 @@ public class PostService {
 
         posts = postRepository.searchPosts(category, keyword, cursorId, size + 1);
 
+//        posts = postRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc();
         boolean hasNext = posts.size() > size;
 
         Long nextCursorId = null;
@@ -259,4 +260,43 @@ public class PostService {
                 .build();
     }
 
+    public PostListGetResponseDto getMyPostList(Long userId, Long cursorId, int size) {
+        List<Post> posts = postRepository.getMyPosts(userId, cursorId, size + 1);
+
+        boolean hasNext = posts.size() > size;
+        Long nextCursorId = null;
+
+        if (hasNext) {
+            Post lastPost = posts.remove(size);
+            nextCursorId = lastPost.getId();
+        }
+
+        List<PostListGetResponseDto.PostDetailDto> postDtos = posts.stream()
+                .map(post -> PostListGetResponseDto.PostDetailDto.builder()
+                        .postId(post.getId())
+                        .problemNumber(post.getProblemNumber())
+                        .title(post.getTitle())
+                        .createdAt(post.getCreatedAt())
+                        .categories(post.getPostCategories().stream()
+                                .map(pc -> PostListGetResponseDto.CategoryDto.builder()
+                                        .categoryId(pc.getCategory().getId())
+                                        .categoryName(pc.getCategory().getName())
+                                        .build())
+                                .toList())
+                        .author(PostListGetResponseDto.AuthorDto.builder()
+                                .userId(post.getUser().getId())
+                                .nickname(post.getUser().getNickname())
+                                .imgUrl(post.getUser().getProfileImgUrl())
+                                .build())
+                        .commentCount(post.getCommentCount())
+                        .likeCount(post.getLikeCount())
+                        .build())
+                .toList();
+
+        return PostListGetResponseDto.builder()
+                .nextCursorId(nextCursorId)
+                .hasNext(hasNext)
+                .posts(postDtos)
+                .build();
+    }
 }

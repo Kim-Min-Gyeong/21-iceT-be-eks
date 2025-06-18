@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class PostGetDetailResponseDto {
     private Long postId;
     private String title;
+    private Long problemNumber;
     private LocalDateTime createdAt;
     private List<CategoryDto> categories;
     private String content;
