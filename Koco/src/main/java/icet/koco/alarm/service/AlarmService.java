@@ -7,6 +7,8 @@ import icet.koco.alarm.emitter.EmitterRepository;
 import icet.koco.alarm.entity.Alarm;
 import icet.koco.alarm.repository.AlarmRepository;
 import icet.koco.alarm.repository.AlarmRepositoryImpl;
+import icet.koco.enums.ErrorMessage;
+import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.entity.Post;
@@ -34,18 +36,17 @@ public class AlarmService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final EmitterRepository emitterRepository;
-    private final AlarmRepositoryImpl alarmRepositoryImpl;
 
     public void createAlarmInternal(AlarmRequestDto requestDto) {
         // 게시글, 알림 송수신자 찾기
         Post post = postRepository.findById(requestDto.getPostId())
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.POST_NOT_FOUND));
 
         User sender = userRepository.findByIdAndDeletedAtIsNull(requestDto.getSenderId())
-            .orElseThrow(() -> new ResourceNotFoundException("사용자가 존재하지 않습니다. (AlarmSender) "));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
         User receiver = userRepository.findByIdAndDeletedAtIsNull(post.getUser().getId())
-            .orElseThrow(() -> new ResourceNotFoundException("사용자가 존재하지 않습니다. (AlarmReceiver) "));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
 
 
@@ -198,10 +199,10 @@ public class AlarmService {
     @Transactional
     public void deleteAlarm(Long userId, Long alarmId) {
         Alarm alarm = alarmRepository.findById(alarmId)
-                .orElseThrow(() -> new ResourceNotFoundException("해당 알림이 존재하지 않습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.ALARM_NOT_FOUND));
 
         if (!alarm.getReceiver().getId().equals(userId)) {
-            throw new UnauthorizedException("본인의 알람만 삭제할 수 있습니다.");
+            throw new ForbiddenException(ErrorMessage.NO_ALARM_PERMISSION);
         }
 
         alarmRepository.delete(alarm);
@@ -210,10 +211,10 @@ public class AlarmService {
     @Transactional
     public void readAlarm(Long userId, Long alarmId) {
         Alarm alarm = alarmRepository.findById(alarmId)
-            .orElseThrow(() -> new ResourceNotFoundException("해당 알림이 존재하지 않습니다."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.ALARM_NOT_FOUND));
 
         if (!alarm.getReceiver().getId().equals(userId)) {
-            throw new UnauthorizedException("본인의 알람만 삭제할 수 있습니다.");
+            throw new ForbiddenException(ErrorMessage.NO_ALARM_PERMISSION);
         }
 
         alarm.setRead(true);

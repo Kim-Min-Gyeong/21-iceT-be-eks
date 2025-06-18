@@ -6,6 +6,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.verify;
 
+import icet.koco.enums.ErrorMessage;
+import icet.koco.global.exception.BadRequestException;
+import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.dto.post.PostCreateEditRequestDto;
@@ -144,7 +147,6 @@ public class PostServiceTest {
             assertThat(savedPost.getProblemNumber()).isEqualTo(30000L);
             assertThat(savedPost.getPostCategories().size()).isEqualTo(1);
             assertThat(savedPost.getPostCategories().get(0).getCategory().getName()).isEqualTo("dp");
-
         }
 
         @Test
@@ -152,8 +154,9 @@ public class PostServiceTest {
             given(userRepository.findById(1L)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> postService.createPost(userId, requestDto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("존재하지 않는 사용자입니다.");
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining(ErrorMessage.USER_NOT_FOUND.getMessage());
+
         }
 
         @Test
@@ -163,8 +166,8 @@ public class PostServiceTest {
 
             // when & then
             assertThatThrownBy(() -> postService.createPost(userId, requestDto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("해당 문제 번호를 가진 Problem이 없습니다.");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
         }
 
         @Test
@@ -175,8 +178,8 @@ public class PostServiceTest {
 
             // when & then
             assertThatThrownBy(() -> postService.createPost(userId, requestDto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("존재하지 않는 카테고리가 포함되어 있습니다.");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
         }
     }
 
@@ -217,7 +220,7 @@ public class PostServiceTest {
             // then & when
             assertThatThrownBy(() -> postService.getPost(userId, postId))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("해당 게시글이 존재하지 않습니다.");
+                .hasMessageContaining(ErrorMessage.POST_NOT_FOUND.getMessage());
         }
     }
 
@@ -260,7 +263,7 @@ public class PostServiceTest {
             // when & then
             assertThatThrownBy(() -> postService.editPost(userId, postId, PostCreateEditRequestDto.builder().build()))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("해당 게시글이 존재하지 않습니다.");
+                .hasMessage(ErrorMessage.POST_NOT_FOUND.getMessage());
         }
 
         @Test
@@ -274,8 +277,8 @@ public class PostServiceTest {
 
             // when & then
             assertThatThrownBy(() -> postService.editPost(userId, postId, PostCreateEditRequestDto.builder().build()))
-                .isInstanceOf(UnauthorizedException.class)
-                .hasMessage("게시글 수정 권한이 없습니다.");
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage(ErrorMessage.NO_POST_PERMISSION.getMessage());
         }
 
         @Test
@@ -290,8 +293,8 @@ public class PostServiceTest {
             given(problemRepository.findByNumber(9999L)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> postService.editPost(userId, postId, requestDto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("해당 문제 번호를 가진 Problem이 없습니다");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
         }
 
         @Test
@@ -308,8 +311,8 @@ public class PostServiceTest {
 
             // when & then
             assertThatThrownBy(() -> postService.editPost(userId, postId, requestDto))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("존재하지 않는 카테고리가 포함되어 있습니다.");
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage(ErrorMessage.INVALID_CATEGORY_INCLUDED.getMessage());
         }
 
     }
@@ -343,8 +346,8 @@ public class PostServiceTest {
             given(postRepository.findByIdWithUser(postId)).willReturn(Optional.of(post));
 
             assertThatThrownBy(() -> postService.deletePost(userId, postId))
-                .isInstanceOf(UnauthorizedException.class)
-                .hasMessageContaining("게시글 삭제 권한이 없습니다.");
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining(ErrorMessage.NO_POST_PERMISSION.getMessage());
         }
 
         @Test
@@ -353,7 +356,7 @@ public class PostServiceTest {
 
             assertThatThrownBy(() -> postService.deletePost(userId, postId))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("해당 게시글이 존재하지 않습니다.");
+                .hasMessageContaining(ErrorMessage.POST_NOT_FOUND.getMessage());
         }
     }
 }

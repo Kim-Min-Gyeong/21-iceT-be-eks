@@ -1,5 +1,6 @@
 package icet.koco.problemSet.service;
 
+import icet.koco.enums.ErrorMessage;
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.problemSet.dto.ProblemSetResponseDto;
@@ -37,10 +38,10 @@ public class ProblemSetService {
     @Transactional(readOnly = true)
     public ProblemSetResponseDto getProblemSetByDate(Long userId, LocalDate date) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(() -> new ForbiddenException("사용자를 찾을 수 없습니다."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
         ProblemSet problemSet = problemSetRepository.findByCreatedAt(date)
-            .orElseThrow(() -> new ForbiddenException("해당 날짜에 출제된 문제집을 찾을 수 없습니다."));
+            .orElseThrow(() -> new ForbiddenException(ErrorMessage.PROBLEM_SET_NOT_FOUND));
 
         // N+1 방지: JOIN FETCH
         List<ProblemSetProblem> mappings = problemSetProblemRepository.findWithProblemsByProblemSet(problemSet);
@@ -73,10 +74,10 @@ public class ProblemSetService {
     @Transactional(readOnly = true)
     public ProblemSolutionResponseDto getProblemSolution(Long problemNumber) {
         Problem problem = problemRepository.findByNumber(problemNumber)
-            .orElseThrow(() -> new ResourceNotFoundException("해당 문제를 찾을 수 없습니다."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROBLEM_NOT_FOUND));
 
         Solution solution = solutionRepository.findByProblem(problem)
-            .orElseThrow(() -> new ResourceNotFoundException("해당 문제에 대한 해설이 없습니다."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.SOLUTION_NOT_FOUND));
 
         return ProblemSolutionResponseDto.builder()
             .bojUrl(problem.getBojUrl())

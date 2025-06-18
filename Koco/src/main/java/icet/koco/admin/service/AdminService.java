@@ -1,6 +1,8 @@
 package icet.koco.admin.service;
 
 import icet.koco.admin.dto.TodayProblemSetRequestDto;
+import icet.koco.enums.ErrorMessage;
+import icet.koco.global.exception.BadRequestException;
 import icet.koco.problemSet.entity.*;
 import icet.koco.problemSet.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,7 @@ public class AdminService {
         List<Problem> problems = problemRepository.findByNumberIn(requestDto.getProblemNumbers());
 
         if (problems.size() != requestDto.getProblemNumbers().size()) {
-            throw new IllegalArgumentException("일치하지 않는 문제 번호가 존재합니다.");
+            throw new BadRequestException(ErrorMessage.INVALID_PROBLEM_INCLUDED);
         }
 
         // problem_set_problem 매핑

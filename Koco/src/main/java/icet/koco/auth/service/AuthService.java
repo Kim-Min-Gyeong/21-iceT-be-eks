@@ -6,6 +6,7 @@ import icet.koco.auth.dto.LogoutResponse;
 import icet.koco.auth.dto.RefreshResponse;
 import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.repository.OAuthRepository;
+import icet.koco.enums.ErrorMessage;
 import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.user.entity.User;
 import icet.koco.user.repository.UserRepository;
@@ -176,7 +177,7 @@ public class AuthService {
             if (accessToken == null) {
                 log.info(">>>>> (LogoutServie) Invalid access token");
             }
-            throw new UnauthorizedException("유효하지 않은 access 토큰입니다.");
+            throw new UnauthorizedException(ErrorMessage.INVALID_ACCESS_TOKEN);
         }
 
         Long userId;
@@ -184,7 +185,7 @@ public class AuthService {
         try {
             userId = jwtTokenProvider.getUserIdFromToken(accessToken);
         } catch (Exception e) {
-            throw new UnauthorizedException("토큰에서 사용자 ID를 추출할 수 없습니다.");
+            throw new UnauthorizedException(ErrorMessage.USER_ID_EXTRACTION_FAILED);
         }
 
 
@@ -220,21 +221,21 @@ public class AuthService {
      */
     public RefreshResponse refreshAccessToken(String refreshToken, HttpServletResponse response) {
         if (!jwtTokenProvider.isInvalidToken(refreshToken)) {
-            throw new UnauthorizedException("유효하지 않은 리프레시 토큰입니다.");
+            throw new UnauthorizedException(ErrorMessage.INVALID_REFRESH_TOKEN);
         }
 
         Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
         Optional<OAuth> oauthOpt = Optional.ofNullable(oauthRepository.findByUserId(userId)
-                .orElseThrow(() -> new UnauthorizedException("OAuth 정보가 존재하지 않습니다.")));
+                .orElseThrow(() -> new UnauthorizedException(ErrorMessage.OAUTH_NOT_FOUND)));
 
         String redisToken = redisTemplate.opsForValue().get(userId.toString());
 
         if (redisToken == null || !redisToken.equals(refreshToken)) {
-            throw new UnauthorizedException("Redis에 저장된 토큰이 일치하지 않습니다.");
+            throw new UnauthorizedException(ErrorMessage.REDIS_NOT_MATCH);
         }
 
         if (oauthOpt.isEmpty() || !refreshToken.equals(oauthOpt.get().getRefreshToken())) {
-            throw new UnauthorizedException("DB에 저장된 토큰이 일치하지 않습니다.");
+            throw new UnauthorizedException(ErrorMessage.DB_NOT_MATCH);
         }
 
         User user = oauthOpt.get().getUser();

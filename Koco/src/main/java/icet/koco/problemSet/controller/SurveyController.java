@@ -36,6 +36,6 @@ public class SurveyController {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         SurveyResponseDto response = surveyService.submitSurvey(userId, requestDto);
 
-        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.CREATED, "해설 저장 완료", response));
+        return ResponseEntity.ok(ApiResponse.success(ApiResponseCode.CREATED, "설문 저장 완료", response));
     }
 }

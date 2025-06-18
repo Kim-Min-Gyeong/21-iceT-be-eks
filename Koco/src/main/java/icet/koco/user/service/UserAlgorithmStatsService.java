@@ -1,5 +1,7 @@
 package icet.koco.user.service;
 
+import icet.koco.enums.ErrorMessage;
+import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.problemSet.entity.Category;
 import icet.koco.problemSet.entity.Survey;
 import icet.koco.problemSet.repository.CategoryRepository;
@@ -35,7 +37,7 @@ public class UserAlgorithmStatsService {
     @Transactional
     public void updateStatsFromSurveys(Long userId) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
         userAlgorithmStatsRepository.deleteByUserId(userId);
 
@@ -86,7 +88,7 @@ public class UserAlgorithmStatsService {
             int capped = Math.min(95, (int) Math.round(normalized));
 
             Category category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 카테고리를 찾을 수 없습니다. " + categoryId));
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.CATEGORY_NOT_FOUND));
 
             UserAlgorithmStats stats = UserAlgorithmStats.builder()
                     .user(user)
