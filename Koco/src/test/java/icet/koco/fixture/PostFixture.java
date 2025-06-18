@@ -49,11 +49,11 @@ public class PostFixture {
 		return post;
 	}
 
-	public static PostCreateEditRequestDto requestDto(Long problemNumber, List<String> categories) {
+	public static PostCreateEditRequestDto requestDto(Long problemNumber, List<String> categories, String UPDATED_TITLE, String UPDATED_CONTENT) {
 		return PostCreateEditRequestDto.builder()
 			.problemNumber(problemNumber)
-			.title(TEST_TITLE)
-			.content(TEST_TITLE)
+			.title(UPDATED_TITLE)
+			.content(UPDATED_CONTENT)
 			.category(categories)
 			.build();
 	}

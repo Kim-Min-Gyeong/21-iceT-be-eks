@@ -76,8 +76,13 @@ public class PostServiceTest {
 	@Mock
 	private PostCategoryRepository postCategoryRepository;
 
-    Long userId = 1L;
-    Long postId = 100L;
+	private static final Long USER_ID = 1L;
+	private static final Long POST_ID = 100L;
+	private static final Long VALID_PROBLEM_NUMBER = 30000L;
+	private static final Long INVALID_PROBLEM_NUMBER = 9999L;
+	private static final String CATEGORY_DP = "dp";
+	private static final List<String> VALID_CATEGORIES = List.of(CATEGORY_DP);
+	private static final List<String> INVALID_CATEGORIES = List.of("test", CATEGORY_DP);
 
     private User user;
     private Post post;
@@ -88,11 +93,9 @@ public class PostServiceTest {
 	@BeforeEach
 	void setUp() {
 		user = UserFixture.validUser();
-		category = CategoryFixture.category(1L, "dp");
-		problem = ProblemFixture.problem(1L, 10000L);
-		post = PostFixture.postWithCategory(user, category, 100L, 30000L);
-		requestDto = PostFixture.requestDto(30000L, List.of(category.getName()));
-
+		category = CategoryFixture.category(1L, CATEGORY_DP);
+		problem = ProblemFixture.problem(1L, VALID_PROBLEM_NUMBER);
+		post = PostFixture.postWithCategory(user, category, POST_ID, VALID_PROBLEM_NUMBER);
 	}
 
     @Nested
@@ -101,12 +104,13 @@ public class PostServiceTest {
         @Test
         void createPost_성공() {
             // given
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
-            given(problemRepository.findByNumber(30000L)).willReturn(Optional.of(problem));
-            given(categoryRepository.findByNameIn(List.of("dp"))).willReturn(List.of(category));
+            given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+            given(problemRepository.findByNumber(VALID_PROBLEM_NUMBER)).willReturn(Optional.of(problem));
+            given(categoryRepository.findByNameIn(VALID_CATEGORIES)).willReturn(List.of(category));
+			PostCreateEditRequestDto requestDto = PostFixture.requestDto(VALID_PROBLEM_NUMBER, VALID_CATEGORIES, PostFixture.TEST_TITLE, PostFixture.TEST_CONTENT);
 
             // when
-            PostCreateResponseDto responseDto = postService.createPost(userId, requestDto);
+            PostCreateResponseDto responseDto = postService.createPost(USER_ID, requestDto);
 
             // then
             assertThat(responseDto).isNotNull();
@@ -118,42 +122,44 @@ public class PostServiceTest {
             assertThat(savedPost.getTitle()).isEqualTo(PostFixture.TEST_TITLE);
             assertThat(savedPost.getContent()).isEqualTo(PostFixture.TEST_CONTENT);
             assertThat(savedPost.getUser()).isEqualTo(user);
-            assertThat(savedPost.getProblemNumber()).isEqualTo(30000L);
-            assertThat(savedPost.getPostCategories().size()).isEqualTo(1);
+            assertThat(savedPost.getProblemNumber()).isEqualTo(VALID_PROBLEM_NUMBER);
             assertThat(savedPost.getPostCategories().get(0).getCategory().getName()).isEqualTo("dp");
         }
 
         @Test
         void createPost_존재하지않는사용자() {
-            given(userRepository.findById(1L)).willReturn(Optional.empty());
+            given(userRepository.findById(USER_ID)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> postService.createPost(userId, requestDto))
+            assertThatThrownBy(() -> postService.createPost(USER_ID, requestDto))
                 .isInstanceOf(ForbiddenException.class)
-                .hasMessageContaining(ErrorMessage.USER_NOT_FOUND.getMessage());
+                .hasMessage(ErrorMessage.USER_NOT_FOUND.getMessage());
 
         }
 
         @Test
         void createPost_존재하지않는문제번호() {
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
-            given(problemRepository.findByNumber(30000L)).willReturn(Optional.empty());
+			PostCreateEditRequestDto requestDto = PostFixture.requestDto(INVALID_PROBLEM_NUMBER, VALID_CATEGORIES, PostFixture.TEST_TITLE, PostFixture.TEST_CONTENT);
+            given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+            given(problemRepository.findByNumber(INVALID_PROBLEM_NUMBER)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> postService.createPost(userId, requestDto))
+            assertThatThrownBy(() -> postService.createPost(USER_ID, requestDto))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
+                .hasMessage(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
         }
 
         @Test
         void createPost_존재하지않는카테고리() {
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
-            given(problemRepository.findByNumber(30000L)).willReturn(Optional.of(problem));
-            given(categoryRepository.findByNameIn(List.of("dp"))).willReturn(List.of());
+			PostCreateEditRequestDto requestDto = PostFixture.requestDto(VALID_PROBLEM_NUMBER, INVALID_CATEGORIES, PostFixture.TEST_TITLE, PostFixture.TEST_CONTENT);
 
-            // when & then
-            assertThatThrownBy(() -> postService.createPost(userId, requestDto))
+            given(userRepository.findById(USER_ID)).willReturn(Optional.of(user));
+            given(problemRepository.findByNumber(VALID_PROBLEM_NUMBER)).willReturn(Optional.of(problem));
+			given(categoryRepository.findByNameIn(INVALID_CATEGORIES)).willReturn(List.of(category));
+
+			// when & then
+            assertThatThrownBy(() -> postService.createPost(USER_ID, requestDto))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
+                .hasMessage(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
         }
     }
 
@@ -164,78 +170,70 @@ public class PostServiceTest {
         @Test
         void getPost_성공() {
             // given
-            given(postRepository.findByIdWithUserAndCategories(postId)).willReturn(Optional.of(post));
-            given(likeRepository.countByPostId(postId)).willReturn(5);
-            given(commentRepository.countByPostIdAndDeletedAtIsNull(postId)).willReturn(5);
-            given(likeRepository.existsByUserIdAndPostId(userId, postId)).willReturn(false);
+            given(postRepository.findByIdWithUserAndCategories(POST_ID)).willReturn(Optional.of(post));
+            given(likeRepository.countByPostId(POST_ID)).willReturn(5);
+            given(commentRepository.countByPostIdAndDeletedAtIsNull(POST_ID)).willReturn(5);
+            given(likeRepository.existsByUserIdAndPostId(USER_ID, POST_ID)).willReturn(false);
 
             // when
-            PostGetDetailResponseDto responseDto = postService.getPost(userId, postId);
+            PostGetDetailResponseDto responseDto = postService.getPost(USER_ID, POST_ID);
 
             // then
             assertThat(responseDto).isNotNull();
-            assertThat(responseDto.getPostId()).isEqualTo(postId);
+            assertThat(responseDto.getPostId()).isEqualTo(POST_ID);
             assertThat(responseDto.getTitle()).isEqualTo(PostFixture.TEST_TITLE);
             assertThat(responseDto.getContent()).isEqualTo(PostFixture.TEST_CONTENT);
             assertThat(responseDto.getLikeCount()).isEqualTo(5);
             assertThat(responseDto.getCommentCount()).isEqualTo(5);
             assertThat(responseDto.isLiked()).isFalse();
             assertThat(responseDto.getCategories().size()).isEqualTo(1);
-            assertThat(responseDto.getCategories().get(0).getCategoryName()).isEqualTo("dp");
-            assertThat(responseDto.getAuthor().getUserId()).isEqualTo(userId);
-            assertThat(responseDto.getAuthor().getNickname()).isEqualTo("테스트 닉네임");
+			assertThat(responseDto.getCategories().get(0).getCategoryName()).isEqualTo(CATEGORY_DP);
+			assertThat(responseDto.getAuthor().getNickname()).isEqualTo(user.getNickname());
+			assertThat(responseDto.getAuthor().getUserId()).isEqualTo(USER_ID);
         }
 
         @Test
         void getPost_존재하지않는게시글() {
             // given
-            given(postRepository.findByIdWithUserAndCategories(postId)).willReturn(Optional.empty());
+            given(postRepository.findByIdWithUserAndCategories(POST_ID)).willReturn(Optional.empty());
 
             // then & when
-            assertThatThrownBy(() -> postService.getPost(userId, postId))
+            assertThatThrownBy(() -> postService.getPost(USER_ID, POST_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(ErrorMessage.POST_NOT_FOUND.getMessage());
+                .hasMessage(ErrorMessage.POST_NOT_FOUND.getMessage());
         }
     }
 
     @Nested
     @DisplayName("게시글 수정")
     class editPostTest {
+
         @Test
         @DisplayName("게시글 수정 성공")
-        void editPost_성공() {
-            // given
-            PostCreateEditRequestDto requestDto = PostCreateEditRequestDto.builder()
-                .problemNumber(2000L)
-                .title(PostFixture.UPDATED_TITLE)
-                .content(PostFixture.UPDATED_CONTENT)
-                .category(List.of("dp"))
-                .build();
+		void editPost_성공() {
+			PostCreateEditRequestDto requestDto = PostFixture.requestDto(VALID_PROBLEM_NUMBER, VALID_CATEGORIES, PostFixture.UPDATED_TITLE, PostFixture.UPDATED_CONTENT);
 
-            given(postRepository.findByIdWithUserAndCategories(postId)).willReturn(Optional.of(post));
-            given(problemRepository.findByNumber(2000L)).willReturn(Optional.of(problem));
-            given(categoryRepository.findByNameIn(List.of("dp"))).willReturn(List.of(category));
+			given(postRepository.findByIdWithUserAndCategories(POST_ID)).willReturn(Optional.of(post));
+			given(problemRepository.findByNumber(VALID_PROBLEM_NUMBER)).willReturn(Optional.of(problem));
+			given(categoryRepository.findByNameIn(VALID_CATEGORIES)).willReturn(List.of(category));
 
-            // when
-            postService.editPost(userId, postId, requestDto);
+			postService.editPost(USER_ID, POST_ID, requestDto);
 
-            // then
-            assertThat(post.getProblemNumber()).isEqualTo(2000L);
-            assertThat(post.getTitle()).isEqualTo(PostFixture.UPDATED_TITLE);
-            assertThat(post.getContent()).isEqualTo(PostFixture.UPDATED_CONTENT);
-            assertThat(post.getPostCategories().size()).isEqualTo(1);
-            assertThat(post.getPostCategories().get(0).getCategory().getName()).isEqualTo("dp");
-            assertThat(post.getUpdatedAt()).isNotNull();
-        }
+			assertThat(post.getProblemNumber()).isEqualTo(VALID_PROBLEM_NUMBER);
+			assertThat(post.getTitle()).isEqualTo(PostFixture.UPDATED_TITLE);
+			assertThat(post.getContent()).isEqualTo(PostFixture.UPDATED_CONTENT);
+			assertThat(post.getPostCategories().get(0).getCategory().getName()).isEqualTo(CATEGORY_DP);
+			assertThat(post.getUpdatedAt()).isNotNull();
+		}
 
         @Test
         @DisplayName("게시글이 존재하지 않으면 예외 발생")
         void editPost_게시글없음() {
             // given
-            given(postRepository.findByIdWithUserAndCategories(postId)).willReturn(Optional.empty());
+            given(postRepository.findByIdWithUserAndCategories(POST_ID)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> postService.editPost(userId, postId, PostCreateEditRequestDto.builder().build()))
+            assertThatThrownBy(() -> postService.editPost(USER_ID, POST_ID, PostCreateEditRequestDto.builder().build()))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage(ErrorMessage.POST_NOT_FOUND.getMessage());
         }
@@ -244,13 +242,13 @@ public class PostServiceTest {
         @DisplayName("본인이 아닌 사용자가 수정 시도 시 예외 발생")
         void editPost_권한없음() {
             // given
-            User nonUser = User.builder().id(2L).build();
-            post.setUser(nonUser);
+            User anotherUser = UserFixture.anotherUser();
+            post.setUser(anotherUser);
 
-            given(postRepository.findByIdWithUserAndCategories(postId)).willReturn(Optional.of(post));
+            given(postRepository.findByIdWithUserAndCategories(POST_ID)).willReturn(Optional.of(post));
 
             // when & then
-            assertThatThrownBy(() -> postService.editPost(userId, postId, PostCreateEditRequestDto.builder().build()))
+            assertThatThrownBy(() -> postService.editPost(USER_ID, POST_ID, PostCreateEditRequestDto.builder().build()))
                 .isInstanceOf(ForbiddenException.class)
                 .hasMessage(ErrorMessage.NO_POST_PERMISSION.getMessage());
         }
@@ -259,35 +257,30 @@ public class PostServiceTest {
         @DisplayName("존재하지 않는 문제 번호 수정 시 예외 발생")
         void editPost_존재하지않는문제번호() {
             // given
-            PostCreateEditRequestDto requestDto = PostCreateEditRequestDto.builder()
-                .problemNumber(9999L)
-                .build();
+			requestDto = PostFixture.requestDto(INVALID_PROBLEM_NUMBER, VALID_CATEGORIES, PostFixture.TEST_TITLE, PostFixture.TEST_CONTENT);
 
-            given(postRepository.findByIdWithUserAndCategories(postId)).willReturn(Optional.of(post));
-            given(problemRepository.findByNumber(9999L)).willReturn(Optional.empty());
+            given(postRepository.findByIdWithUserAndCategories(POST_ID)).willReturn(Optional.of(post));
+            given(problemRepository.findByNumber(INVALID_PROBLEM_NUMBER)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> postService.editPost(userId, postId, requestDto))
+            assertThatThrownBy(() -> postService.editPost(USER_ID, POST_ID, requestDto))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
+                .hasMessage(ErrorMessage.INVALID_PROBLEM_INCLUDED.getMessage());
         }
 
-        @Test
-        @DisplayName("존재하지 않는 카테고리 수정 시 예외 발생")
-        void editPost_존재하지않는카테고리() {
-            // given
-            PostCreateEditRequestDto requestDto = PostCreateEditRequestDto.builder()
-                .category(List.of("graph", "dp")) // 요청은 2개지만
-                .build();
+		@Test
+		@DisplayName("존재하지 않는 카테고리 수정 시 예외 발생")
+		void editPost_존재하지않는카테고리() {
+			PostCreateEditRequestDto requestDto = PostFixture.requestDto(30000L, INVALID_CATEGORIES, PostFixture.UPDATED_TITLE, PostFixture.UPDATED_CONTENT);
 
-            given(postRepository.findByIdWithUserAndCategories(postId)).willReturn(Optional.of(post));
-            given(categoryRepository.findByNameIn(List.of("graph", "dp")))
-                .willReturn(List.of(category)); // 반환은 1개만
+			given(postRepository.findByIdWithUserAndCategories(POST_ID)).willReturn(Optional.of(post));
+			given(problemRepository.findByNumber(30000L)).willReturn(Optional.of(problem));
+			given(categoryRepository.findByNameIn(INVALID_CATEGORIES)).willReturn(List.of(category)); // 1개만 반환
 
-            // when & then
-            assertThatThrownBy(() -> postService.editPost(userId, postId, requestDto))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage(ErrorMessage.INVALID_CATEGORY_INCLUDED.getMessage());
-        }
+			assertThatThrownBy(() -> postService.editPost(USER_ID, POST_ID, requestDto))
+				.isInstanceOf(BadRequestException.class)
+				.hasMessage(ErrorMessage.INVALID_CATEGORY_INCLUDED.getMessage());
+		}
+
 
     }
 
@@ -298,39 +291,36 @@ public class PostServiceTest {
         @Test
         void deletePost_성공(){
             // given
-            given(postRepository.findByIdWithUser(postId)).willReturn(Optional.of(post));
+            given(postRepository.findByIdWithUser(POST_ID)).willReturn(Optional.of(post));
 
             // when
-            postService.deletePost(userId, postId);
+            postService.deletePost(USER_ID, POST_ID);
 
             // then
             assertThat(post.getDeletedAt()).isNotNull();
-            verify(postRepository).findByIdWithUser(postId); // 메서드 호출 검증
+            verify(postRepository).findByIdWithUser(POST_ID);
         }
 
         @Test
         void deletePost_삭제권한없음(){
-            User nonUser = User.builder()
-                .id(999L)
-                .nickname("권한없음")
-                .build();
+            User anotherUser = UserFixture.anotherUser();
 
-            post.setUser(nonUser);
+            post.setUser(anotherUser);
 
-            given(postRepository.findByIdWithUser(postId)).willReturn(Optional.of(post));
+            given(postRepository.findByIdWithUser(POST_ID)).willReturn(Optional.of(post));
 
-            assertThatThrownBy(() -> postService.deletePost(userId, postId))
+            assertThatThrownBy(() -> postService.deletePost(USER_ID, POST_ID))
                 .isInstanceOf(ForbiddenException.class)
-                .hasMessageContaining(ErrorMessage.NO_POST_PERMISSION.getMessage());
+                .hasMessage(ErrorMessage.NO_POST_PERMISSION.getMessage());
         }
 
         @Test
         void deletePost_존재하지않는게시글(){
-            given(postRepository.findByIdWithUser(postId)).willReturn(Optional.empty());
+            given(postRepository.findByIdWithUser(POST_ID)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> postService.deletePost(userId, postId))
+            assertThatThrownBy(() -> postService.deletePost(USER_ID, POST_ID))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(ErrorMessage.POST_NOT_FOUND.getMessage());
+                .hasMessage(ErrorMessage.POST_NOT_FOUND.getMessage());
         }
     }
 }

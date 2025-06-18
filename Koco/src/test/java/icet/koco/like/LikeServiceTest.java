@@ -163,7 +163,7 @@ class LikeServiceTest {
             // when & then
             assertThatThrownBy(() -> likeService.deleteLike(userId, postId))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("존재하지 않는 사용자입니다.");
+                .hasMessage("존재하지 않는 사용자입니다.");
         }
 
         @Test
