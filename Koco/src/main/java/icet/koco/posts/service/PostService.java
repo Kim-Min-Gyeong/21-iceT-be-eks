@@ -65,7 +65,7 @@ public class PostService {
 
 		// 카테고리가 존재하는지 확인
 		if (categories.size() != requestDto.getCategory().size()) {
-			throw new BadRequestException(ErrorMessage.INVALID_PROBLEM_INCLUDED);
+			throw new BadRequestException(ErrorMessage.INVALID_CATEGORY_INCLUDED);
 		}
 
 		// Post Entity 생성
