@@ -1,6 +1,7 @@
 package icet.koco.problemSet.service;
 
 import icet.koco.enums.DifficultyLevel;
+import icet.koco.enums.ErrorMessage;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.problemSet.dto.ProblemSetSurveyRequestDto;
 import icet.koco.problemSet.dto.ProblemSurveyRequestDto;
@@ -40,21 +41,22 @@ public class SurveyService {
     @Transactional
     public SurveyResponseDto submitSurvey(Long userId, ProblemSetSurveyRequestDto requestDto) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
         ProblemSet problemSet = problemSetRepository.findById(requestDto.getProblemSetId())
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 문제집입니다."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROBLEM_SET_NOT_FOUND));
 
         List<Survey> surveysToSave = new ArrayList<>();
 
         for (ProblemSurveyRequestDto response : requestDto.getResponses()) {
             Problem problem = problemRepository.findById(response.getProblemId())
-                .orElseThrow(() -> new ResourceNotFoundException(">>>>> 문제 ID " + response.getProblemId() + "가 존재하지 않습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROBLEM_NOT_FOUND));
 
             // 문제 Id가 해당 ProblemSet에 있는지 검증
             boolean exists = problemSetProblemRepository.existsByProblemSetIdAndProblemId(problemSet.getId(), problem.getId());
             if (!exists) {
-                throw new ResourceNotFoundException("문제 ID " + problem.getId() + "는 문제집 " + problemSet.getId() + "에 포함되어 있지 않습니다.");
+				String message = ErrorMessage.PROBLEM_NOT_IN_PROBLEM_SET.format(problem.getId(), problemSet.getId());
+				throw new ResourceNotFoundException(message);
             }
 
             Survey survey = Survey.builder()

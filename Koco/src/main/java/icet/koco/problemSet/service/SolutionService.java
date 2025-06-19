@@ -1,5 +1,7 @@
 package icet.koco.problemSet.service;
 
+import icet.koco.enums.ErrorMessage;
+import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.problemSet.dto.AiSolutionRequestDto;
 import icet.koco.problemSet.entity.Problem;
 import icet.koco.problemSet.entity.Solution;
@@ -23,12 +25,11 @@ public class SolutionService {
     public void saveFromAi(AiSolutionRequestDto aiSolutionRequestDto) {
         // 백준 번호로 내부 problemId 조회
         Problem problem = problemRepository.findByNumber(aiSolutionRequestDto.getProblemNumber())
-            .orElseThrow(() -> new IllegalArgumentException(
-                "해당 문제 번호를 가진 Problem이 없습니다: " + aiSolutionRequestDto.getProblemNumber()));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROBLEM_NOT_FOUND));
 
         // 문제에 대한 해설이 이미 존재하는지 확인
         if (solutionRepository.existsByProblem(problem)) {
-            throw new IllegalArgumentException("이미 해당 문제에 대한 해설이 존재합니다.");
+            throw new IllegalArgumentException(ErrorMessage.ALREADY_SOLUTION_EXIST.getMessage());
         }
 
         // Solution 저장

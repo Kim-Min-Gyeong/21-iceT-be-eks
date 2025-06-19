@@ -3,6 +3,7 @@ package icet.koco.posts.service;
 import icet.koco.alarm.dto.AlarmRequestDto;
 import icet.koco.alarm.service.AlarmService;
 import icet.koco.enums.AlarmType;
+import icet.koco.enums.ErrorMessage;
 import icet.koco.global.exception.AlreadyLikedException;
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
@@ -30,14 +31,14 @@ public class LikeService {
     @Transactional
     public LikeResponseDto createLike(Long userId, Long postId) {
         if (likeRepository.existsByUserIdAndPostId(userId, postId)) {
-            throw new AlreadyLikedException("이미 좋아요를 누른 게시글입니다.");
+            throw new AlreadyLikedException(ErrorMessage.ALREADY_LIKED_ERROR);
         }
 
-        Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
+		User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
-        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다"));
+		Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
+			.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.POST_NOT_FOUND));
 
         Like like = Like.builder()
             .post(post)
@@ -71,7 +72,7 @@ public class LikeService {
         }
 
         if (!success) {
-            throw new RuntimeException("동시성 문제로 좋아요 등록에 실패했습니다.");
+            throw new RuntimeException(ErrorMessage.LIKE_CONCURRENCY_FAILURE.getMessage());
         }
 
         return LikeResponseDto.builder()
@@ -84,24 +85,25 @@ public class LikeService {
     @Transactional
     public void deleteLike(Long userId, Long postId) {
         // 사용자, 게시글 존재 확인
-        userRepository.findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
+		userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
-        Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
+		Post post = postRepository.findByIdAndDeletedAtIsNull(postId)
+			.orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.POST_NOT_FOUND));
+
 
         // 좋아요 취소 확인
         if (!likeRepository.existsByUserIdAndPostId(userId, postId)) {
-            throw new AlreadyLikedException("이미 좋아요 취소를 한 게시글입니다.");
+            throw new AlreadyLikedException(ErrorMessage.ALREADY_UNLIKED_ERROR);
         }
 
         // 좋아요 조회
         Like like = likeRepository.findByUserIdAndPostId(userId, postId)
-            .orElseThrow(() -> new ResourceNotFoundException("좋아요가 존재하지 않습니다."));
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.LIKE_NOT_FOUND));
 
         // 본인 확인
         if (!like.getUser().getId().equals(userId)) {
-            throw new ForbiddenException("본인의 좋아요만 취소할 수 있습니다.");
+            throw new ForbiddenException(ErrorMessage.NO_LIKE_PERMISSION);
         }
 
         // 좋아요 삭제
@@ -118,12 +120,12 @@ public class LikeService {
             } catch (ObjectOptimisticLockingFailureException e) {
                 retry++;
                 postRepository.findByIdAndDeletedAtIsNull(postId)
-                    .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 게시글입니다."));
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.POST_NOT_FOUND));
             }
         }
 
         if (!success) {
-            throw new RuntimeException("동시성 문제로 좋아요 취소에 실패했습니다.");
+            throw new RuntimeException(ErrorMessage.LIKE_CONCURRENCY_FAILURE.getMessage());
         }
     }
 }
