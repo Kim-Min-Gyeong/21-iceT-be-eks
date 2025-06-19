@@ -1,10 +1,7 @@
 package icet.koco.user.repository;
 
-import icet.koco.user.entity.User;
 import icet.koco.user.entity.UserAlgorithmStats;
-import icet.koco.problemSet.entity.Category;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

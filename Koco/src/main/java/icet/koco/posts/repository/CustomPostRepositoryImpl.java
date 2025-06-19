@@ -1,7 +1,6 @@
 package icet.koco.posts.repository;
 
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import icet.koco.posts.dto.post.AuthorDto;
@@ -13,9 +12,7 @@ import icet.koco.posts.entity.QPost;
 import icet.koco.posts.entity.QPostCategory;
 import icet.koco.problemSet.entity.QCategory;
 import icet.koco.user.entity.QUser;
-import java.time.ZoneId;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;

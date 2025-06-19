@@ -6,7 +6,6 @@ import icet.koco.enums.AlarmType;
 import icet.koco.enums.ErrorMessage;
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
-import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.dto.comment.CommentCreateEditRequestDto;
 import icet.koco.posts.dto.comment.CommentCreateEditResponseDto;
 import icet.koco.posts.dto.comment.CommentListResponseDto;

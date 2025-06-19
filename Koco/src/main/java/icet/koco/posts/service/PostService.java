@@ -2,12 +2,10 @@ package icet.koco.posts.service;
 
 import static java.time.LocalDateTime.now;
 
-import icet.koco.enums.ApiResponseCode;
 import icet.koco.enums.ErrorMessage;
 import icet.koco.global.exception.BadRequestException;
 import icet.koco.global.exception.ForbiddenException;
 import icet.koco.global.exception.ResourceNotFoundException;
-import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.posts.dto.post.PostCreateEditRequestDto;
 import icet.koco.posts.dto.post.PostCreateResponseDto;
 import icet.koco.posts.dto.post.PostGetDetailResponseDto;

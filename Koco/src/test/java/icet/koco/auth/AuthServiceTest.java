@@ -5,7 +5,6 @@ import icet.koco.auth.dto.LogoutResponse;
 import icet.koco.auth.entity.OAuth;
 import icet.koco.auth.service.AuthService;
 import icet.koco.auth.service.KakaoOAuthClient;
-import icet.koco.auth.dto.KakaoUserResponse;
 import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.fixture.KakaoUserFixture;
 import icet.koco.fixture.UserFixture;
@@ -16,7 +15,6 @@ import icet.koco.util.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,8 +32,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 

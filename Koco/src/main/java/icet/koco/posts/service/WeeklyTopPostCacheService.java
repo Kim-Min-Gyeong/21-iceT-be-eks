@@ -3,7 +3,6 @@ package icet.koco.posts.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import icet.koco.posts.dto.post.TopPostResponseDto;
-import icet.koco.posts.entity.Post;
 import icet.koco.posts.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
