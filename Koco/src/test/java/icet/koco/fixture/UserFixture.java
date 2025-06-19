@@ -48,4 +48,12 @@ public class UserFixture {
 			.statusMsg("다른 유저 상태메세지")
 			.build();
 	}
+
+	public static User userWithIdAndEmail(Long id, String email) {
+		return User.builder()
+			.id(id)
+			.email(email)
+			.name("테스트 유저")
+			.build();
+	}
 }
