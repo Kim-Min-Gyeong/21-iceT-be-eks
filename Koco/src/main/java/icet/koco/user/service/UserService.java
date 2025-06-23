@@ -5,11 +5,8 @@ import icet.koco.auth.repository.OAuthRepository;
 import icet.koco.auth.service.KakaoOAuthClient;
 import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.global.exception.UnauthorizedException;
-import icet.koco.problemSet.repository.ProblemSetRepository;
 import icet.koco.problemSet.repository.SurveyRepository;
 import icet.koco.user.dto.UserAlgorithmStatsResponseDto;
-import icet.koco.user.dto.UserCategoryStatDto;
-import icet.koco.user.dto.UserCategoryStatProjection;
 import icet.koco.user.dto.UserInfoResponseDto;
 import icet.koco.user.entity.User;
 import icet.koco.user.entity.UserAlgorithmStats;
@@ -36,6 +33,7 @@ public class UserService {
     private final OAuthRepository oAuthRepository;
     private final CookieUtil cookieUtil;
     private final UserAlgorithmStatsRepository userAlgorithmStatsRepository;
+    private final SurveyRepository surveyRepository;
 
     /**
      * 유저 탈퇴
@@ -44,31 +42,72 @@ public class UserService {
      */
     @Transactional
     public void deleteUser(Long userId, HttpServletResponse response) {
-        // 1. 유저 조회
-        User user = userRepository.findById(userId)
+        // 유저 조회
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
             .orElseThrow(() -> new ResourceNotFoundException("해당 유저 정보를 찾을 수 없습니다."));
 
-        // 2. OAuth 정보 조회
+        // OAuth 정보 조회
         OAuth oauth = oAuthRepository.findByUserId(userId)
             .orElseThrow(() -> new UnauthorizedException("OAuth 정보가 존재하지 않습니다."));
 
-        // 3. Kakao unlink 호출
+        // Kakao unlink 호출
         try {
             kakaoOAuthClient.unlinkUser(oauth.getProviderId());
         } catch (Exception e) {
-            log.warn(">>>>> Kakao unlink 실패: {}", e.getMessage());
+            log.error(">>>>> Kakao unlink 실패: {}", e.getMessage());
         }
 
-        // 4. Redis refreshToken 삭제
-        redisTemplate.delete(userId.toString());
+        // Redis refreshToken 삭제
+        try {
+            redisTemplate.delete(userId.toString());
+        } catch (Exception e) {
+            log.warn("redis에서 refreshToken 삭제 실패: {}", e.getMessage());
+        }
 
-        // 5. Soft delete 처리
+        // 설문 내역 & 알고리즘 스탯 삭제
+        try {
+            surveyRepository.deleteByUserId(userId);
+            log.info("설문 내역 삭제 완료: userId={}", userId);
+        } catch (Exception e) {
+            log.error("설문 내역 삭제 실패: {}", e.getMessage());
+        }
+
+        try {
+            userAlgorithmStatsRepository.deleteByUserId(userId);
+            log.info("사용자 알고리즘 스탯 삭제 완료: userId={}", userId);
+        } catch (Exception e) {
+            log.error("사용자 알고리즘 스탯 삭제 실패: {}", e.getMessage());
+        }
+
+        // 유저 정보 Soft delete 처리
         user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        // 6. 쿠키 삭제 처리
+        // 쿠키 삭제 처리
         cookieUtil.invalidateCookie(response, "access_token");
         cookieUtil.invalidateCookie(response, "refresh_token");
+    }
+
+
+    /**
+     * 유저 정보 등록
+     * @param userId
+     * @param nickname
+     * @param statusMsg
+     * @param profileImgUrl
+     */
+    @Transactional
+    public void postUserInfo(Long userId, String nickname, String statusMsg, String profileImgUrl) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new ResourceNotFoundException("유저를 찾을 수 없습니다."));
+
+        String userName = user.getName();
+
+        user.setNickname(nickname!=null?nickname:userName);         // 혹시 nickname이 안 들어오면 name으로 저장
+        user.setProfileImgUrl(profileImgUrl);
+        user.setStatusMsg(statusMsg);
+
+        userRepository.save(user);
     }
 
     /**
@@ -81,7 +120,7 @@ public class UserService {
     @Transactional
     public void updateUserInfo(Long userId, String nickname, String statusMsg, String profileImgUrl) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다"));
+                .orElseThrow(()-> new ResourceNotFoundException("유저를 찾을 수 없습니다."));
 
         if (nickname != null) {
             user.setNickname(nickname);
@@ -99,26 +138,6 @@ public class UserService {
     }
 
 
-    /**
-     * 유저 정보 등록
-     * @param userId
-     * @param nickname
-     * @param statusMsg
-     * @param profileImgUrl
-     */
-    @Transactional
-    public void postUserInfo(Long userId, String nickname, String statusMsg, String profileImgUrl) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(()-> new RuntimeException("유저를 찾을 수 없습니다."));
-
-        String userName = user.getName();
-
-        user.setNickname(nickname!=null?nickname:userName);         // 혹시 nickname이 안 들어오면 name으로 저장
-        user.setProfileImgUrl(profileImgUrl);
-        user.setStatusMsg(statusMsg);
-
-        userRepository.save(user);
-    }
 
     /**
      * 유저 정보 조회
@@ -128,7 +147,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserInfoResponseDto getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("유저를 찾을 수 없습니다."));
 
         return UserInfoResponseDto.builder()
                 .userId(user.getId())
@@ -138,11 +157,16 @@ public class UserService {
                 .build();
     }
 
-    // userAlgorithmStats 조회 API
+
+    /**
+     * userAlgorithmStats 조회 API
+     * @param userId
+     * @return
+     */
     @Transactional(readOnly = true)
     public UserAlgorithmStatsResponseDto getAlgorithmStats(Long userId) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(() -> new UnauthorizedException("존재하지 않는 사용자입니다."));
+            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다."));
 
         List<UserAlgorithmStats> stats = userAlgorithmStatsRepository.findByUserId(userId);
 

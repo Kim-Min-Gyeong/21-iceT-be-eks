@@ -1,5 +1,7 @@
 package icet.koco.user.service;
 
+import icet.koco.enums.ErrorMessage;
+import icet.koco.global.exception.ResourceNotFoundException;
 import icet.koco.problemSet.entity.Category;
 import icet.koco.problemSet.entity.Survey;
 import icet.koco.problemSet.repository.CategoryRepository;
@@ -13,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,35 +33,11 @@ public class UserAlgorithmStatsService {
     private final SurveyRepository surveyRepository;
     private final ProblemCategoryRepository problemCategoryRepository;
 
-
-    @Transactional
-    public void upsertCorrectRate(Long userId, Long categoryId, Double correctRate) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
-
-        Category category = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + categoryId));
-
-        Optional<UserAlgorithmStats> existing = statsRepository.findByUserAndCategory(user, category);
-
-        if (existing.isPresent()) {
-            UserAlgorithmStats stats = existing.get();
-            stats.setCorrectRate(correctRate.intValue());
-        } else {
-            UserAlgorithmStats newStats = UserAlgorithmStats.builder()
-                .user(user)
-                .category(category)
-                .correctRate(correctRate.intValue())
-                .build();
-            statsRepository.save(newStats);
-        }
-    }
-
     // updateStatsFromSurveys - 비선형 정규화 (x^0.6 방식) 적용
     @Transactional
     public void updateStatsFromSurveys(Long userId) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
         userAlgorithmStatsRepository.deleteByUserId(userId);
 
@@ -111,7 +88,7 @@ public class UserAlgorithmStatsService {
             int capped = Math.min(95, (int) Math.round(normalized));
 
             Category category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 카테고리를 찾을 수 없습니다. " + categoryId));
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.CATEGORY_NOT_FOUND));
 
             UserAlgorithmStats stats = UserAlgorithmStats.builder()
                     .user(user)
@@ -123,7 +100,6 @@ public class UserAlgorithmStatsService {
         }
 
         userAlgorithmStatsRepository.saveAll(statsToSave);
-        log.info(">>>>> 유저 {} 알고리즘 통계 {}건 저장 완료 (정규화 방식 적용)", userId, statsToSave.size());
     }
 
 }

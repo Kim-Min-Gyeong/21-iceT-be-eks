@@ -1,6 +1,5 @@
 package icet.koco.util;
 
-import icet.koco.util.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -15,7 +14,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -29,7 +27,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI().equals("/api/backend/v1/auth/refresh");
+        String path = request.getRequestURI();
+
+        if (path.startsWith("/actuator/")) {
+            return true;
+        }
+
+        return path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/webjars/")
+                || path.startsWith("/actuator/")
+				|| path.startsWith("/api/backend/v1/solution")
+                || path.equals("/api/backend/v1/auth/refresh")
+                || path.equals("/api/backend/v1/auth/callback")
+                || path.equals("/oauth/kakao/callback")
+                || path.equals("/api/backend/admin/today/problem-set")
+                || path.equals("/api/backend/test/token")
+                || path.equals("/api/backend/test/timezone");
+
+
     }
 
     @Override
@@ -38,54 +54,74 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         FilterChain filterChain)
         throws ServletException, IOException {
 
-        String token = null;
+        String token = resolveToken(request);
+
+        // 토큰이 없으면 401 바로 반환
+        if (token == null) {
+            handleUnauthorized(response, "TOKEN_NOT_FOUND", "Access Token이 존재하지 않습니다.");
+            return;
+        }
+
+        try {
+            // 유효성 검사 실패
+            if (!jwtTokenProvider.isInvalidToken(token)) {
+                handleUnauthorized(response, "INVALID_TOKEN", "Access Token이 만료되었거나 유효하지 않습니다.");
+                return;
+            }
+
+            // 레디스 블랙리스트 검사
+            if (redisTemplate.opsForValue().get("BL:" + token) != null) {
+                handleUnauthorized(response, "BLACKLISTED_TOKEN", "해당 토큰은 블랙리스트에 등록되어 있습니다.");
+                return;
+            }
+
+            // 유효한 토큰 → userId 추출 및 SecurityContext 등록
+            Long userId = jwtTokenProvider.getUserIdFromToken(token);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // 다음 필터로 진행
+            filterChain.doFilter(request, response);
+
+        } catch (Exception e) {
+            handleUnauthorized(response, "UNAUTHORIZED", "인증 처리 중 오류가 발생했습니다.");
+        }
+    }
+
+
+    /**
+     * Authorization 헤더 또는 쿠키에서 토큰 추출
+     */
+    private String resolveToken(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("access_token".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
+                    return cookie.getValue();
                 }
             }
         }
 
-        if (token != null) {
-            System.out.println(">>>>> access_token 추출됨: " + token);
+        return null;
+    }
 
-            // 토큰 유효성 검사 실패
-            if (!jwtTokenProvider.validateToken(token)) {
-                System.out.println(">>>>> 토큰 유효성 검사 실패");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"expired token\"}");
-                response.getWriter().flush();
-                return;
-            }
-
-            // 블랙리스트 검사
-            String isBlacklisted = redisTemplate.opsForValue().get("BL:" + token);
-            if (isBlacklisted != null) {
-                System.out.println(">>>>> 블랙리스트 토큰");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write("{\"error\": \"BL checked. expired token\"}");
-                response.getWriter().flush();
-                return;
-            }
-
-            // 정상 토큰 → userId 추출 및 인증 객체 생성
-            Long userId = jwtTokenProvider.getUserIdFromToken(token);
-            System.out.println(">>>>> userId 추출됨: " + userId);
-
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    userId,
-                    null,
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            System.out.println(">>>>> SecurityContext에 인증 정보 저장 완료");
-        }
-
-        // 다음 필터로 진행
-        filterChain.doFilter(request, response);
+    /**
+     * 401 Unauthorized 응답 반환
+     */
+    private void handleUnauthorized(HttpServletResponse response, String code, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(
+            String.format("{\"code\":\"%s\",\"message\":\"%s\"}", code, message)
+        );
+        response.getWriter().flush();
     }
 }
