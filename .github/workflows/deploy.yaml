@@ -11,7 +11,6 @@ env:
   AWS_REGION: ap-northeast-2
   ECR_HOST: ${{ secrets.ECR_HOST }}
   IMAGE_TAG: ${{ github.event.inputs.image_tag }}
-  DEPLOY_ZIP_KEY: spring-app-deploy.zip
 
 jobs:
   deploy:
@@ -27,8 +26,6 @@ jobs:
             echo "S3_BUCKET=eks-koco-codedeploy-artifacts" >> $GITHUB_ENV
             echo "ECR_REPO_NAME=eks-app-repo"              >> $GITHUB_ENV
             echo "SSM_PATH=/spring/prod/"                  >> $GITHUB_ENV
-            echo "CD_APP_NAME=eks-was-deploy-app"          >> $GITHUB_ENV
-            echo "CD_DG_NAME=eks-was-deploy-group"         >> $GITHUB_ENV
 
       # ───────────────────────────────────────────────────────────────
       # 2) If manual dispatch, check for existing tag
