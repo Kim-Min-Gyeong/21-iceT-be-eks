@@ -111,15 +111,15 @@ jobs:
             echo "ℹ️ No changes to commit"
           fi
 
+      - name: Test AWS caller identity
+        run: aws sts get-caller-identity
+
       # 8. AWS OIDC 인증
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
-      
-      - name: Test AWS caller identity
-        run: aws sts get-caller-identity
 
       # 9. EKS kubeconfig 설정
       - name: Setup kubeconfig for EKS
