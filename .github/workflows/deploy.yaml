@@ -117,6 +117,9 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Test AWS caller identity
+        run: aws sts get-caller-identity
 
       # 9. EKS kubeconfig 설정
       - name: Setup kubeconfig for EKS
