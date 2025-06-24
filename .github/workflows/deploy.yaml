@@ -87,21 +87,21 @@ jobs:
           | while IFS=$'\t' read -r name value; do
               [[ -n "$name" ]] || continue
               key=$(basename "$name" | tr '.' '_' | tr '[:lower:]' '[:upper:]')
-              echo "  $key: \"$value\"" >> 21-iceT-GitOps/apps/spring/spring-secret.yaml
+              echo "  $key: \"$value\"" >> 21-iceT-GitOps/apps/springboot/spring-secret.yaml
             done
 
       # 6. deployment.yaml 이미지 태그 업데이트
       - name: Update image tag in deployment.yaml
         run: |
           FULL_REPO="$ECR_HOST/$ECR_REPO_NAME"
-          sed -i "s|image:.*|image: ${FULL_REPO}:${IMAGE_TAG}|" 21-iceT-GitOps/apps/spring/deployment.yaml
+          sed -i "s|image:.*|image: ${FULL_REPO}:${IMAGE_TAG}|" 21-iceT-GitOps/apps/springboot/deployment.yaml
 
       # 7. 변경사항 커밋 & 푸시
       - name: Commit and push to GitOps repo
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add apps/spring/deployment.yaml apps/spring/spring-secret.yaml
+          git add apps/springboot/deployment.yaml apps/springboot/spring-secret.yaml
 
           if ! git diff --cached --quiet; then
             git commit -m "Update Spring image to ${IMAGE_TAG} and update secret"
