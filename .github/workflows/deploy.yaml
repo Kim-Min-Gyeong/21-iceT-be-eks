@@ -25,7 +25,7 @@ jobs:
       - name: Set environment variables
         run: |
           echo "ECR_REPO_NAME=eks-app-repo" >> $GITHUB_ENV
-          echo "SSM_PATH=/spring/prod/"     >> $GITHUB_ENV
+          echo "SSM_PATH=/spring/test/"     >> $GITHUB_ENV
 
       # 2. 태그 중복 확인
       - name: Check if tag already exists in ECR
