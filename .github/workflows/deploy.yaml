@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'ECR 이미지 태그'
+        description: 'ECR 이미지 태그 (예: v1.0.0)'
         required: true
 
 env:
@@ -15,28 +15,24 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout this repo
+        uses: actions/checkout@v2
 
-      # ───────────────────────────────────────────────────────────────
-      # 1) Set dynamic S3 bucket and ECR repo name based on branch
-      # ───────────────────────────────────────────────────────────────
-      - name: Configure environment for branch
+      # 1. 환경 변수 설정
+      - name: Set environment variables
         run: |
-            echo "S3_BUCKET=eks-koco-codedeploy-artifacts" >> $GITHUB_ENV
-            echo "ECR_REPO_NAME=eks-app-repo"              >> $GITHUB_ENV
-            echo "SSM_PATH=/spring/prod/"                  >> $GITHUB_ENV
+          echo "ECR_REPO_NAME=eks-app-repo" >> $GITHUB_ENV
+          echo "SSM_PATH=/spring/prod/"     >> $GITHUB_ENV
 
-      # ───────────────────────────────────────────────────────────────
-      # 2) If manual dispatch, check for existing tag
-      # ───────────────────────────────────────────────────────────────
+      # 2. 태그 중복 확인
       - name: Check if tag already exists in ECR
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           FULL_REPO="$ECR_HOST/$ECR_REPO_NAME"
-          echo "🔍 Checking if tag '$IMAGE_TAG' exists at $FULL_REPO..."
           RESULT=$(aws ecr describe-images \
             --registry-id ${ECR_HOST%%.*} \
             --repository-name $ECR_REPO_NAME \
@@ -47,52 +43,45 @@ jobs:
             exit 1
           fi
 
-      # ───────────────────────────────────────────────────────────────
-      # 3) Build & Push Docker image for both dev and main
-      # ───────────────────────────────────────────────────────────────
+      # 3. Docker 빌드 & 푸시
       - name: Build and Push Docker image to ECR
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           FULL_REPO="$ECR_HOST/$ECR_REPO_NAME"
-          echo "🔐 Logging in to Amazon ECR at $FULL_REPO..."
           aws ecr get-login-password --region $AWS_REGION \
             | docker login --username AWS --password-stdin $ECR_HOST
 
-          echo "🔧 Building Docker image..."
           docker build -t my-spring-app .
-
-          echo "🏷 Tagging image with version: $IMAGE_TAG"
           docker tag my-spring-app:latest $FULL_REPO:$IMAGE_TAG
-
-          echo "🏷 Tagging image as latest"
           docker tag my-spring-app:latest $FULL_REPO:latest
-
-          echo "📤 Pushing image $FULL_REPO:$IMAGE_TAG"
           docker push $FULL_REPO:$IMAGE_TAG
+          docker push $FULL_REPO:latest
 
-      # 4) Generate Kubernetes Secret from SSM
+      # 4. GitOps 레포 clone (← 여기로 이동)
+      - name: Clone GitOps repository
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/Kim-Min-Gyeong/21-iceT-GitOps.git
+
+      # 5. SSM → Secret YAML 생성
       - name: Generate Kubernetes Secret YAML from SSM
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-
-          mkdir -p 21-iceT-GitOps/apps/spring
-          
           echo "apiVersion: v1
           kind: Secret
           metadata:
             name: spring-env-secret
             namespace: springboot
           type: Opaque
-          stringData:" > 21-iceT-GitOps/apps/spring/spring-secret.yaml
+          stringData:" > spring-secret.yaml
 
           aws ssm get-parameters-by-path \
-            --path "/spring/prod/" \
+            --path "$SSM_PATH" \
             --with-decryption \
-            --region ap-northeast-2 \
+            --region $AWS_REGION \
             --query 'Parameters[*].{Name:Name,Value:Value}' \
             --output text \
           | while IFS=$'\t' read -r name value; do
@@ -101,16 +90,15 @@ jobs:
               echo "  $key: \"$value\"" >> 21-iceT-GitOps/apps/spring/spring-secret.yaml
             done
 
-      # 5) Update image tag in Kubernetes manifest
+      # 6. deployment.yaml 이미지 태그 업데이트
       - name: Update image tag in deployment.yaml
         run: |
           FULL_REPO="$ECR_HOST/$ECR_REPO_NAME"
           sed -i "s|image:.*|image: ${FULL_REPO}:${IMAGE_TAG}|" 21-iceT-GitOps/apps/spring/deployment.yaml
 
-      # 6) Commit & push to GitOps repository
+      # 7. 변경사항 커밋 & 푸시
       - name: Commit and push to GitOps repo
         run: |
-          cd 21-iceT-GitOps
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add apps/spring/deployment.yaml apps/spring/spring-secret.yaml
