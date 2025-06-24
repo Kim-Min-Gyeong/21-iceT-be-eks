@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 0. Checkout this repo
       - name: Checkout this repo
         uses: actions/checkout@v2
 
@@ -59,12 +60,12 @@ jobs:
           docker push $FULL_REPO:$IMAGE_TAG
           docker push $FULL_REPO:latest
 
-      # 4. GitOps 레포 clone (← 여기로 이동)
+      # 4. GitOps 레포 clone
       - name: Clone GitOps repository
         run: |
           git clone https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/Kim-Min-Gyeong/21-iceT-GitOps.git
 
-      # 5. SSM → Secret YAML 생성
+      # 5. spring-secret.yaml 생성 (커밋하지 않음)
       - name: Generate Kubernetes Secret YAML from SSM
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -76,7 +77,7 @@ jobs:
             name: spring-env-secret
             namespace: springboot
           type: Opaque
-          stringData:" > spring-secret.yaml
+          stringData:" > 21-iceT-GitOps/apps/springboot/spring-secret.yaml
 
           aws ssm get-parameters-by-path \
             --path "$SSM_PATH" \
@@ -90,30 +91,40 @@ jobs:
               echo "  $key: \"$value\"" >> 21-iceT-GitOps/apps/springboot/spring-secret.yaml
             done
 
-      - name: Check secret.yaml contents
-        run: |
-          cat 21-iceT-GitOps/apps/springboot/spring-secret.yaml
-
       # 6. deployment.yaml 이미지 태그 업데이트
       - name: Update image tag in deployment.yaml
         run: |
           FULL_REPO="$ECR_HOST/$ECR_REPO_NAME"
           sed -i "s|image:.*|image: ${FULL_REPO}:${IMAGE_TAG}|" 21-iceT-GitOps/apps/springboot/deployment.yaml
-          
-      - name: Check deployment.yaml contents
-        run: |
-          grep image: 21-iceT-GitOps/apps/springboot/deployment.yaml
 
-      # 7. 변경사항 커밋 & 푸시
+      # 7. GitOps 레포 커밋 (secret.yaml 제외)
       - name: Commit and push to GitOps repo
         run: |
+          cd 21-iceT-GitOps
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add 21-iceT-GitOps/apps/springboot/deployment.yaml 21-iceT-GitOps/apps/springboot/spring-secret.yaml
+          git add 21-iceT-GitOps/apps/springboot/deployment.yaml
 
           if ! git diff --cached --quiet; then
-            git commit -m "Update Spring image to ${IMAGE_TAG} and update secret"
+            git commit -m "Update Spring image to ${IMAGE_TAG}"
             git push
           else
             echo "ℹ️ No changes to commit"
           fi
+
+      # 8. AWS OIDC 인증
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 9. EKS kubeconfig 설정
+      - name: Setup kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      # 10. Secret 직접 적용
+      - name: Apply Secret to EKS
+        run: |
+          kubectl apply -f spring-secret.yaml
