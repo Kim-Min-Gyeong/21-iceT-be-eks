@@ -1,5 +1,6 @@
 package icet.koco.problemSet.controller;
 
+import icet.koco.enums.ApiResponseCode;
 import icet.koco.global.dto.ApiResponse;
 import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.problemSet.dto.ProblemSetResponseDto;
@@ -28,18 +29,28 @@ public class ProblemSetController {
 
     private final ProblemSetService problemSetService;
 
+    /**
+     * 날짜별 문제집 조회
+     * @param date
+     * @return
+     */
     @Operation(summary = "날짜별 문제집 조회")
     @GetMapping
-    public ResponseEntity<ApiResponse<ProblemSetResponseDto>> getProblemSetByDate(
+    public ResponseEntity<?> getProblemSetByDate(
         @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         ProblemSetResponseDto response = problemSetService.getProblemSetByDate(userId, date);
         return ResponseEntity.ok(
-            ApiResponse.success("PROBLEM_SET_FETCH_SUCCESS", "문제 리스트 조회 성공", response)
+            ApiResponse.success(ApiResponseCode.SUCCESS,"문제 리스트 조회에 성공하였습니다.", response)
         );
     }
 
+    /**
+     * 문제 별 해설 조회
+     * @param problemNumber
+     * @return
+     */
     @Operation(summary = "문제 별 해설 조회")
     @GetMapping("/{problemNumber}/solution")
     public ResponseEntity<?> getProblemSolution(@PathVariable Long problemNumber) {
@@ -50,7 +61,7 @@ public class ProblemSetController {
 
         ProblemSolutionResponseDto dto = problemSetService.getProblemSolution(problemNumber);
         return ResponseEntity.ok(
-            ApiResponse.success("PROBLEM_SOLUTION_SUCCESS", "문제 해설 조회 성공", dto)
+            ApiResponse.success(ApiResponseCode.SUCCESS, "문제 해설 조회에 성공하였습니다.", dto)
         );
     }
 }

@@ -1,8 +1,8 @@
 package icet.koco.problemSet.service;
 
 import icet.koco.enums.DifficultyLevel;
+import icet.koco.enums.ErrorMessage;
 import icet.koco.global.exception.ResourceNotFoundException;
-import icet.koco.global.exception.UnauthorizedException;
 import icet.koco.problemSet.dto.ProblemSetSurveyRequestDto;
 import icet.koco.problemSet.dto.ProblemSurveyRequestDto;
 import icet.koco.problemSet.dto.SurveyResponseDto;
@@ -41,32 +41,29 @@ public class SurveyService {
     @Transactional
     public SurveyResponseDto submitSurvey(Long userId, ProblemSetSurveyRequestDto requestDto) {
         User user = userRepository.findByIdAndDeletedAtIsNull(userId)
-            .orElseThrow(() -> new UnauthorizedException("존재하지 않는 사용자입니다."));
-        log.info(">>>>> 사용자 ID: {}", userId);
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.USER_NOT_FOUND));
 
         ProblemSet problemSet = problemSetRepository.findById(requestDto.getProblemSetId())
-            .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 문제집입니다."));
-        log.info(">>>>> 문제집 번호: {}", problemSet.getId());
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROBLEM_SET_NOT_FOUND));
 
         List<Survey> surveysToSave = new ArrayList<>();
 
         for (ProblemSurveyRequestDto response : requestDto.getResponses()) {
             Problem problem = problemRepository.findById(response.getProblemId())
-                .orElseThrow(() -> new ResourceNotFoundException(">>>>> 문제 ID " + response.getProblemId() + "가 존재하지 않습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessage.PROBLEM_NOT_FOUND));
 
             // 문제 Id가 해당 ProblemSet에 있는지 검증
             boolean exists = problemSetProblemRepository.existsByProblemSetIdAndProblemId(problemSet.getId(), problem.getId());
             if (!exists) {
-                throw new UnauthorizedException("문제 ID " + problem.getId() + "는 문제집 " + problemSet.getId() + "에 포함되어 있지 않습니다.");
+				String message = ErrorMessage.PROBLEM_NOT_IN_PROBLEM_SET.format(problem.getId(), problemSet.getId());
+				throw new ResourceNotFoundException(message);
             }
-
-            log.info(">>>>> 문제 번호: {}", problem.getId());
 
             Survey survey = Survey.builder()
                 .user(user)
                 .problemSet(problemSet)
                 .problem(problem)
-                .isSolved(response.isSolved())
+                .isSolved(response.getIsSolved())
                 .difficultyLevel(DifficultyLevel.valueOf(response.getDifficultyLevel()))
                 .answeredAt(LocalDateTime.now())
                 .build();
@@ -83,8 +80,6 @@ public class SurveyService {
         List<Long> savedIds = savedSurveys.stream()
             .map(Survey::getId)
             .toList();
-
-        log.info(">>>>> 저장된 설문 ID 목록: {}", savedIds);
 
         return SurveyResponseDto.builder()
             .code("SURVEY_CREATED")
