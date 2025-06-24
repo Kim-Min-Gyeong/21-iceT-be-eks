@@ -100,11 +100,9 @@ jobs:
       # 7. GitOps 레포 커밋 (secret.yaml 제외)
       - name: Commit and push to GitOps repo
         run: |
-          cd 21-iceT-GitOps
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/Kim-Min-Gyeong/21-iceT-GitOps.git
-          git add apps/springboot/deployment.yaml 
+          git add 21-iceT-GitOps/apps/springboot/deployment.yaml
 
           if ! git diff --cached --quiet; then
             git commit -m "Update Spring image to ${IMAGE_TAG}"
