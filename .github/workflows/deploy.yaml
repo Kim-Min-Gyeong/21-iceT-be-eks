@@ -17,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 0. Checkout this repo
       - name: Checkout this repo
         uses: actions/checkout@v2
 
@@ -29,9 +28,6 @@ jobs:
 
       # 2. 태그 중복 확인
       - name: Check if tag already exists in ECR
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           FULL_REPO="$ECR_HOST/$ECR_REPO_NAME"
           RESULT=$(aws ecr describe-images \
@@ -46,9 +42,6 @@ jobs:
 
       # 3. Docker 빌드 & 푸시
       - name: Build and Push Docker image to ECR
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           FULL_REPO="$ECR_HOST/$ECR_REPO_NAME"
           aws ecr get-login-password --region $AWS_REGION \
@@ -67,9 +60,6 @@ jobs:
 
       # 5. spring-secret.yaml 생성 (커밋하지 않음)
       - name: Generate Kubernetes Secret YAML from SSM
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           echo "apiVersion: v1
           kind: Secret
@@ -100,9 +90,10 @@ jobs:
       # 7. GitOps 레포 커밋 (secret.yaml 제외)
       - name: Commit and push to GitOps repo
         run: |
+          cd 21-iceT-GitOps
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add 21-iceT-GitOps/apps/springboot/deployment.yaml
+          git add apps/springboot/deployment.yaml
 
           if ! git diff --cached --quiet; then
             git commit -m "Update Spring image to ${IMAGE_TAG}"
@@ -110,9 +101,6 @@ jobs:
           else
             echo "ℹ️ No changes to commit"
           fi
-
-      - name: Test AWS caller identity
-        run: aws sts get-caller-identity
 
       # 8. AWS OIDC 인증
       - name: Configure AWS credentials via OIDC
@@ -129,4 +117,4 @@ jobs:
       # 10. Secret 직접 적용
       - name: Apply Secret to EKS
         run: |
-          kubectl apply -f spring-secret.yaml
+          kubectl apply -f 21-iceT-GitOps/apps/springboot/spring-secret.yaml
