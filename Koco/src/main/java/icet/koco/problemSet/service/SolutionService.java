@@ -39,6 +39,7 @@ public class SolutionService {
 					existing.setCodeCpp(aiSolutionRequestDto.getSolution_code().getCpp());
 					existing.setCodeJava(aiSolutionRequestDto.getSolution_code().getJava());
 					existing.setCodePy(aiSolutionRequestDto.getSolution_code().getPython());
+					existing.setUpdatedAt(LocalDateTime.now());
 					return existing;
 				})
 				.orElseGet(() -> Solution.builder()
