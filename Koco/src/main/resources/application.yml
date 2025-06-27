@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: ${APPLICATION_NAME}
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_CLASSNAME}
+
+  jpa:
+    database: mysql
+    hibernate:
+      ddl-auto: update
+
+  jackson:
+    time-zone: Asia/Seoul
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 5000ms
+
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_S3_ACCESS_KEY}
+      secret-key: ${AWS_S3_SECRET_KEY}
+    region:
+      static: ${AWS_REGION_STATIC}
+    s3:
+      bucket: ${S3_BUCKET}
+    stack:
+      auto: false
+
+server:
+  address: 0.0.0.0
+  port: 8080
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: DEBUG
