@@ -51,6 +51,4 @@ ENTRYPOINT ["java", \
   "--add-opens", "java.base/java.lang=ALL-UNNAMED", \
   "-javaagent:/opt/scouter/agent.java/scouter.agent.jar", \
   "-Dscouter.config=/opt/scouter/agent.java/conf/scouter.conf", \
-  "-Dspring.data.redis.host=redis-master.redis.svc.cluster.local", \
-  "-Dspring.data.redis.port=6379", \
   "-jar", "app.jar"]
