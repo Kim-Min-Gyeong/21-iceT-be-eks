@@ -46,7 +46,8 @@ public class SecurityConfig {
             "http://localhost:5173",            // 프론트 로컬 주소
             "https://ktbkoco.com",              // 운영서버 도메인 주소
             "https://koco-admin.o-r.kr",         // 개발서버 도메인 주소
-            "https://koco.click"         // 개발서버 도메인 주소
+            "https://koco.click",         // 개발서버 도메인 주소
+			"https://koco-test.click"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
