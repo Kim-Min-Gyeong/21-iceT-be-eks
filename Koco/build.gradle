@@ -33,7 +33,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'io.micrometer:micrometer-registry-prometheus’
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	// DB & JWT
 	runtimeOnly 'com.mysql:mysql-connector-j'
