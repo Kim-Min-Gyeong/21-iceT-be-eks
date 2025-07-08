@@ -75,7 +75,7 @@ jobs:
           kind: Secret
           metadata:
             name: spring-env-secret
-            namespace: springboot
+            namespace: spring-prod
           type: Opaque
           stringData:" > 21-iceT-gitops-eks/apps/base/spring/templates/spring-secret.yaml
           
